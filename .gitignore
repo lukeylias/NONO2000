@@ -2,9 +2,3 @@ node_modules/
 dist/
 .DS_Store
 *.tsbuildinfo
-
-# Local research and design history. These are not part of the public game.
-audit/
-NONO2000_DESIGN_QA.md
-public/assets/nono2000-felt.png
-public/assets/last-terminal-crt.png
