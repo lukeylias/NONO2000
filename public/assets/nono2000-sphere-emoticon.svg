@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <clipPath id="orb-clip">
+      <circle cx="256" cy="256" r="208" />
+    </clipPath>
+
+    <radialGradient id="orb-base" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(178 142) rotate(55) scale(392)">
+      <stop stop-color="#79EEFF" />
+      <stop offset="0.5" stop-color="#19BFE4" />
+      <stop offset="1" stop-color="#087DBD" />
+    </radialGradient>
+
+    <radialGradient id="orb-light" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(171 138) rotate(48) scale(281 268)">
+      <stop stop-color="white" stop-opacity="0.56" />
+      <stop offset="0.43" stop-color="#BDF7FF" stop-opacity="0.14" />
+      <stop offset="1" stop-color="#123E82" stop-opacity="0" />
+    </radialGradient>
+
+    <linearGradient id="orb-depth" x1="256" y1="58" x2="256" y2="464" gradientUnits="userSpaceOnUse">
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0" />
+      <stop offset="1" stop-color="#0B3471" stop-opacity="0.42" />
+    </linearGradient>
+
+    <linearGradient id="rim" x1="148" y1="82" x2="374" y2="437" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C9FAFF" />
+      <stop offset="0.46" stop-color="#42D5F4" />
+      <stop offset="1" stop-color="#0759A5" />
+    </linearGradient>
+
+    <filter id="orb-shadow" x="16" y="24" width="480" height="480" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#173B6D" flood-opacity="0.28" />
+    </filter>
+  </defs>
+
+  <g filter="url(#orb-shadow)">
+    <circle cx="256" cy="256" r="214" fill="url(#rim)" />
+    <circle cx="256" cy="256" r="208" fill="url(#orb-base)" />
+
+    <g clip-path="url(#orb-clip)">
+      <image href="nono2000-fill-keycap-v3.png" x="42" y="42" width="428" height="428" preserveAspectRatio="xMidYMid slice" opacity="0.94" />
+      <circle cx="256" cy="256" r="208" fill="url(#orb-light)" />
+      <circle cx="256" cy="256" r="208" fill="url(#orb-depth)" />
+      <ellipse cx="177" cy="126" rx="91" ry="42" transform="rotate(-25 177 126)" fill="white" fill-opacity="0.19" />
+      <ellipse cx="151" cy="111" rx="39" ry="16" transform="rotate(-25 151 111)" fill="white" fill-opacity="0.32" />
+    </g>
+
+    <circle cx="256" cy="256" r="205" stroke="white" stroke-opacity="0.42" stroke-width="4" />
+  </g>
+</svg>
