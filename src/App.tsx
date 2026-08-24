@@ -45,10 +45,10 @@ interface WorkerResponse {
 
 export function App() {
   const [booted, setBooted] = useState(false)
-  const [size, setSize] = useState<BoardSize>(10)
-  const [difficulty, setDifficulty] = useState<PuzzleDifficulty>('standard')
+  const [size, setSize] = useState<BoardSize>(5)
+  const [difficulty, setDifficulty] = useState<PuzzleDifficulty>('beginner')
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null)
-  const [marks, setMarks] = useState<MarkGrid>(() => createMarkGrid(10))
+  const [marks, setMarks] = useState<MarkGrid>(() => createMarkGrid(5))
   const [paintMode, setPaintMode] = useState<PaintMode>('filled')
   const [status, setStatus] = useState<GameStatus>('generating')
   const [elapsed, setElapsed] = useState(0)
@@ -58,7 +58,7 @@ export function App() {
   const [showSetup, setShowSetup] = useState(false)
   const [soundOn, setSoundOn] = useState(true)
   const [musicOn, setMusicOn] = useState(true)
-  const [timerMinutes, setTimerMinutes] = useState<TimerMinutes>(0)
+  const [timerMinutes, setTimerMinutes] = useState<TimerMinutes>(1)
   const [isPaused, setIsPaused] = useState(false)
   const [timePenaltyPulse, setTimePenaltyPulse] = useState(0)
   const [mistakes, setMistakes] = useState<Set<string>>(() => new Set())
