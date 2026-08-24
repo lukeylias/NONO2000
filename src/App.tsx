@@ -445,7 +445,6 @@ export function App() {
           />
         ) : (
           <BootScreen
-            onConfigure={() => clickThen(() => setShowMenu(true))}
             onRules={() => clickThen(() => setShowRules(true))}
             onStart={() => clickThen(openSetup)}
             onToggleMusic={() => clickThen(toggleMusic)}

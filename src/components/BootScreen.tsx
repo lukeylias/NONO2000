@@ -5,7 +5,6 @@ interface BootScreenProps {
   soundOn: boolean
   onStart: () => void
   onRules: () => void
-  onConfigure: () => void
   onToggleMusic: () => void
   onToggleSound: () => void
 }
@@ -15,7 +14,6 @@ export function BootScreen({
   soundOn,
   onStart,
   onRules,
-  onConfigure,
   onToggleMusic,
   onToggleSound,
 }: BootScreenProps) {
@@ -48,7 +46,6 @@ export function BootScreen({
           >
             Music {musicOn ? 'on' : 'off'}
           </button>
-          <button onClick={onConfigure}>System menu</button>
         </nav>
       </section>
     </main>
