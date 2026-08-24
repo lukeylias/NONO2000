@@ -29,6 +29,7 @@ import {
   type BoardSize,
   type CellMark,
   type MarkGrid,
+  type PaintMode,
   type Puzzle,
   type PuzzleDifficulty,
   type TimerMinutes,
@@ -48,6 +49,7 @@ export function App() {
   const [difficulty, setDifficulty] = useState<PuzzleDifficulty>('standard')
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null)
   const [marks, setMarks] = useState<MarkGrid>(() => createMarkGrid(10))
+  const [paintMode, setPaintMode] = useState<PaintMode>('filled')
   const [status, setStatus] = useState<GameStatus>('generating')
   const [elapsed, setElapsed] = useState(0)
   const [timerKey, setTimerKey] = useState(0)
@@ -93,6 +95,7 @@ export function App() {
     setSize(nextSize)
     setPuzzle(null)
     setMarks(createMarkGrid(nextSize))
+    setPaintMode('filled')
     setElapsed(0)
     setIsPaused(false)
     pausedElapsed.current = 0
@@ -459,9 +462,10 @@ export function App() {
                 cornerContent={systemPanel}
                 key={`${puzzle.seed}:${timerKey}`}
                 marks={marks}
-                mode="filled"
+                mode={paintMode}
                 onFeedback={playSound}
                 onInteraction={resumeOnBoardInteraction}
+                onModeChange={(nextMode) => clickThen(() => setPaintMode(nextMode))}
                 onPaint={paint}
                 onScoreEvent={recordScore}
                 puzzle={puzzle}

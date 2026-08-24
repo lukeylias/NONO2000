@@ -20,6 +20,7 @@ interface PuzzleBoardProps {
   onPaint: (row: number, column: number, mark: CellMark) => void
   onFeedback?: (cue: SoundCue) => void
   onInteraction?: () => void
+  onModeChange?: (mode: PaintMode) => void
   onScoreEvent?: (row: number, column: number, kind: ScoreEventKind) => void
   revealingSolution?: boolean
   cornerContent?: ReactNode
@@ -47,6 +48,7 @@ export function PuzzleBoard({
   onPaint,
   onFeedback,
   onInteraction,
+  onModeChange,
   onScoreEvent,
   revealingSolution = false,
   cornerContent,
@@ -142,19 +144,20 @@ export function PuzzleBoard({
     ) return
     event.preventDefault()
     onInteraction?.()
+    const primaryMark = event.pointerType === 'mouse' ? 'filled' : mode
     const key = `${row}:${column}`
     const errorMark = errorMarks.get(key)
     if (marks[row][column] !== 'unknown') {
       drag.current = null
       return
     }
-    if (errorMark === mode) {
+    if (errorMark === primaryMark) {
       clearError(key)
       onFeedback?.('clear')
       drag.current = null
       return
     }
-    drag.current = { mark: mode, visited: new Set() }
+    drag.current = { mark: primaryMark, visited: new Set() }
     applyOnce(row, column)
   }
 
@@ -311,6 +314,27 @@ export function PuzzleBoard({
           )),
         )}
       </div>
+
+      {onModeChange ? (
+        <div className="paint-mode-selector" aria-label="Primary mark" role="group">
+          <button
+            aria-pressed={mode === 'filled'}
+            className="paint-mode-fill"
+            onClick={() => onModeChange('filled')}
+            type="button"
+          >
+            Fill
+          </button>
+          <button
+            aria-pressed={mode === 'crossed'}
+            className="paint-mode-cross"
+            onClick={() => onModeChange('crossed')}
+            type="button"
+          >
+            Cross
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }

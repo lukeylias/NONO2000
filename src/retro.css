@@ -339,11 +339,11 @@ a:focus-visible {
   --cell-size: min(
     var(--base-cell-size),
     calc((100vw - 400px) / var(--grid-size)),
-    calc((100vh - 410px) / var(--grid-size))
+    calc((100vh - 430px) / var(--grid-size))
   );
   display: grid;
   grid-template-columns: 300px max-content 16px;
-  grid-template-rows: 290px max-content 16px;
+  grid-template-rows: 290px max-content auto 16px;
   justify-content: center;
   width: max-content;
   max-width: none;
@@ -477,6 +477,58 @@ a:focus-visible {
   box-shadow: none;
   cursor: default;
   touch-action: none;
+}
+
+.paint-mode-selector {
+  grid-column: 2;
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  padding: 16px var(--grid-line) 0;
+  box-sizing: border-box;
+}
+
+.paint-mode-selector button {
+  min-height: 52px;
+  border: 2px solid rgba(76, 82, 91, 0.2);
+  border-radius: 12px;
+  background: rgba(250, 250, 246, 0.92);
+  color: rgba(56, 56, 61, 0.7);
+  font-family: var(--retro-display);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease,
+    transform 120ms ease;
+}
+
+.paint-mode-selector button:hover {
+  border-color: rgba(0, 151, 216, 0.52);
+}
+
+.paint-mode-selector button:active {
+  transform: translateY(1px);
+}
+
+.paint-mode-selector .paint-mode-fill[aria-pressed="true"] {
+  border-color: var(--retro-blue-deep);
+  background: rgba(22, 184, 216, 0.13);
+  color: var(--retro-blue-deep);
+}
+
+.paint-mode-selector .paint-mode-cross[aria-pressed="true"] {
+  border-color: var(--retro-orange);
+  background: rgba(255, 132, 25, 0.11);
+  color: #a75800;
+}
+
+.paint-mode-selector button:focus-visible {
+  outline: 3px solid rgba(0, 151, 216, 0.28);
+  outline-offset: 2px;
 }
 
 .puzzle-cell {
@@ -895,10 +947,10 @@ a:focus-visible {
     --cell-size: min(
       var(--base-cell-size),
       calc((100vw - 510px) / var(--grid-size)),
-      calc((100vh - 407px) / var(--grid-size))
+      calc((100vh - 427px) / var(--grid-size))
     );
     grid-template-columns: 395px max-content 16px;
-    grid-template-rows: 300px max-content 16px;
+    grid-template-rows: 300px max-content auto 16px;
     transform: translateX(-10px);
   }
 }
@@ -913,10 +965,10 @@ a:focus-visible {
     --cell-size: min(
       var(--base-cell-size),
       calc((100vw - 340px) / var(--grid-size)),
-      calc((100vh - 330px) / var(--grid-size))
+      calc((100vh - 360px) / var(--grid-size))
     );
     grid-template-columns: 260px max-content 16px;
-    grid-template-rows: 260px max-content 16px;
+    grid-template-rows: 260px max-content auto 16px;
   }
 
   .column-clue,
@@ -979,11 +1031,11 @@ a:focus-visible {
   .puzzle-layout {
     --grid-line: 2px;
     --cell-size: min(
-      calc((100vw - 108px) / var(--grid-size)),
-      calc((100svh - 350px) / var(--grid-size))
+      var(--base-cell-size),
+      calc((100vw - 108px) / var(--grid-size))
     );
     grid-template-columns: 58px max-content 16px;
-    grid-template-rows: auto 60px max-content 16px;
+    grid-template-rows: auto 60px max-content auto 16px;
     border-radius: 16px;
   }
 
@@ -1008,6 +1060,19 @@ a:focus-visible {
   .puzzle-grid {
     grid-column: 2;
     grid-row: 3;
+  }
+
+  .paint-mode-selector {
+    grid-column: 2;
+    grid-row: 4;
+    gap: 8px;
+    padding-top: 12px;
+  }
+
+  .paint-mode-selector button {
+    min-height: 48px;
+    border-radius: 10px;
+    font-size: 13px;
   }
 
   .column-clue,
@@ -1053,14 +1118,18 @@ a:focus-visible {
 @media (max-width: 500px) {
   .puzzle-layout {
     --cell-size: min(
-      calc((100vw - 86px) / var(--grid-size)),
-      calc((100svh - 350px) / var(--grid-size))
+      var(--base-cell-size),
+      calc((100vw - 86px) / var(--grid-size))
     );
     grid-template-columns: 40px max-content 16px;
   }
 
   .row-clue {
     padding-right: 4px;
+  }
+
+  .paint-mode-selector {
+    gap: 6px;
   }
 }
 

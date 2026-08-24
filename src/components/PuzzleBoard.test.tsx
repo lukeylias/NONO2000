@@ -2,7 +2,13 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { getGridClues } from '../game/clues'
-import { createMarkGrid, type BinaryGrid, type CellMark, type Puzzle } from '../game/types'
+import {
+  createMarkGrid,
+  type BinaryGrid,
+  type CellMark,
+  type PaintMode,
+  type Puzzle,
+} from '../game/types'
 import { applyPlayerMark } from '../game/play'
 import { PuzzleBoard } from './PuzzleBoard'
 
@@ -27,7 +33,65 @@ function BoardHarness() {
   return <PuzzleBoard marks={marks} mode="filled" onPaint={paint} puzzle={puzzle} />
 }
 
+function TouchModeHarness() {
+  const [marks, setMarks] = useState(createMarkGrid(10))
+  const [mode, setMode] = useState<PaintMode>('filled')
+  const paint = (row: number, column: number, mark: CellMark) => {
+    setMarks((current) => applyPlayerMark(current, puzzle.solution, row, column, mark))
+  }
+  return (
+    <PuzzleBoard
+      marks={marks}
+      mode={mode}
+      onModeChange={setMode}
+      onPaint={paint}
+      puzzle={puzzle}
+    />
+  )
+}
+
 describe('PuzzleBoard', () => {
+  it('lets touch users select Cross as the primary mark', () => {
+    render(<TouchModeHarness />)
+
+    const fillMode = screen.getByRole('button', { name: 'Fill' })
+    const crossMode = screen.getByRole('button', { name: 'Cross' })
+    expect(fillMode).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(crossMode)
+    expect(crossMode).toHaveAttribute('aria-pressed', 'true')
+    expect(fillMode).toHaveAttribute('aria-pressed', 'false')
+
+    fireEvent.pointerDown(
+      screen.getByRole('gridcell', { name: 'Row 1, column 2, unknown' }),
+      { isPrimary: true, pointerId: 1, pointerType: 'touch' },
+    )
+    fireEvent.pointerUp(window, { pointerId: 1, pointerType: 'touch' })
+
+    expect(screen.getByRole('gridcell', { name: 'Row 1, column 2, crossed' })).toBeInTheDocument()
+  })
+
+  it('keeps mouse left-click on Fill when Cross is selected', () => {
+    const paint = vi.fn()
+    render(
+      <PuzzleBoard
+        marks={createMarkGrid(10)}
+        mode="crossed"
+        onModeChange={vi.fn()}
+        onPaint={paint}
+        puzzle={puzzle}
+      />,
+    )
+
+    fireEvent.pointerDown(
+      screen.getByRole('gridcell', { name: 'Row 1, column 1, unknown' }),
+      { button: 0, isPrimary: true, pointerType: 'mouse' },
+    )
+    fireEvent.pointerUp(window)
+
+    expect(paint).toHaveBeenCalledWith(0, 0, 'filled')
+  })
+
   it('locks a filled cell after it is painted', () => {
     render(<BoardHarness />)
     const cell = screen.getByRole('gridcell', { name: 'Row 1, column 1, unknown' })
