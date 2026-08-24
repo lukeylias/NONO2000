@@ -79,22 +79,20 @@ export function CommandMenu({
           </div>
         </fieldset>
 
-        {size === 10 ? (
-          <fieldset className="command-group">
-            <legend>Difficulty</legend>
-            <div className="command-difficulties">
-              {PUZZLE_DIFFICULTIES.map((level) => (
-                <button
-                  aria-pressed={difficulty === level}
-                  key={level}
-                  onClick={() => onSelectDifficulty(level)}
-                >
-                  {level}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        ) : null}
+        <fieldset className="command-group">
+          <legend>Difficulty</legend>
+          <div className="command-difficulties">
+            {PUZZLE_DIFFICULTIES.map((level) => (
+              <button
+                aria-pressed={difficulty === level}
+                key={level}
+                onClick={() => onSelectDifficulty(level)}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+        </fieldset>
 
         <div className="command-toggles">
           <button aria-label={`Timer ${timerModeLabel(timerMinutes)}`} onClick={onCycleTimer}>

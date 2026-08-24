@@ -3,6 +3,24 @@ import { describe, expect, it, vi } from 'vitest'
 import { PuzzleSetup } from './PuzzleSetup'
 
 describe('PuzzleSetup', () => {
+  it.each([5, 10, 15] as const)('offers difficulty selection for a %i×%i puzzle', (size) => {
+    render(
+      <PuzzleSetup
+        difficulty="standard"
+        onBack={vi.fn()}
+        onCycleTimer={vi.fn()}
+        onSelectDifficulty={vi.fn()}
+        onSelectSize={vi.fn()}
+        onStart={vi.fn()}
+        size={size}
+        timerMinutes={0}
+      />,
+    )
+
+    expect(screen.getByRole('group', { name: 'Difficulty' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'standard' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
   it('configures a puzzle before starting it', () => {
     const back = vi.fn()
     const cycleTimer = vi.fn()

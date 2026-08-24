@@ -3,6 +3,32 @@ import { describe, expect, it, vi } from 'vitest'
 import { CommandMenu } from './CommandMenu'
 
 describe('CommandMenu', () => {
+  it.each([5, 10, 15] as const)('offers difficulty selection for a %i×%i puzzle', (size) => {
+    render(
+      <CommandMenu
+        difficulty="hard"
+        inSession
+        musicOn
+        onClose={vi.fn()}
+        onDisconnect={vi.fn()}
+        onNewPuzzle={vi.fn()}
+        onReset={vi.fn()}
+        onRules={vi.fn()}
+        onSelectDifficulty={vi.fn()}
+        onSelectSize={vi.fn()}
+        onCycleTimer={vi.fn()}
+        onToggleMusic={vi.fn()}
+        onToggleSound={vi.fn()}
+        size={size}
+        soundOn
+        timerMinutes={0}
+      />,
+    )
+
+    expect(screen.getByRole('group', { name: 'Difficulty' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'hard' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
   it('keeps session controls behind one working system panel', () => {
     const close = vi.fn()
     const selectDifficulty = vi.fn()

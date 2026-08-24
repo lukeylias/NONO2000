@@ -40,37 +40,51 @@ describe('10×10 seed variety', () => {
   }, 30_000)
 })
 
-describe('10×10 difficulty bands', () => {
-  const bands: Record<PuzzleDifficulty, [number, number]> = {
-    beginner: [1, 4],
-    standard: [5, 6],
-    hard: [7, Number.POSITIVE_INFINITY],
+describe('all-size difficulty bands', () => {
+  const bands: Record<BoardSize, Record<PuzzleDifficulty, [number, number]>> = {
+    5: {
+      beginner: [1, 3],
+      standard: [4, 5],
+      hard: [6, Number.POSITIVE_INFINITY],
+    },
+    10: {
+      beginner: [1, 4],
+      standard: [5, 6],
+      hard: [7, Number.POSITIVE_INFINITY],
+    },
+    15: {
+      beginner: [1, 5],
+      standard: [6, 8],
+      hard: [9, Number.POSITIVE_INFINITY],
+    },
   }
 
-  for (const difficulty of ['beginner', 'standard', 'hard'] as PuzzleDifficulty[]) {
-    it(`generates ${difficulty} puzzles in the intended deduction band`, () => {
-      const signatures = new Set<string>()
+  for (const size of [5, 10, 15] as BoardSize[]) {
+    for (const difficulty of ['beginner', 'standard', 'hard'] as PuzzleDifficulty[]) {
+      it(`generates ${size}×${size} ${difficulty} puzzles in the intended deduction band`, () => {
+        const signatures = new Set<string>()
 
-      for (let index = 0; index < 12; index += 1) {
-        const startSeed = (Math.imul(index + 1, 0x27d4eb2d) ^ 0x85ebca6b) >>> 0
-        const puzzle = generatePuzzleSync(10, startSeed, 100_000, difficulty)
-        const analysis = analyzeLogicDifficulty(puzzle.rowClues, puzzle.columnClues)
-        const [minimum, maximum] = bands[difficulty]
+        for (let index = 0; index < 8; index += 1) {
+          const startSeed = (Math.imul(index + 1, 0x27d4eb2d) ^ 0x85ebca6b) >>> 0
+          const puzzle = generatePuzzleSync(size, startSeed, 500_000, difficulty)
+          const analysis = analyzeLogicDifficulty(puzzle.rowClues, puzzle.columnClues)
+          const [minimum, maximum] = bands[size][difficulty]
 
-        expect(analysis.sweeps).toBeGreaterThanOrEqual(minimum)
-        expect(analysis.sweeps).toBeLessThanOrEqual(maximum)
-        expect(countSolutions(puzzle.rowClues, puzzle.columnClues)).toBe(1)
+          expect(analysis.sweeps).toBeGreaterThanOrEqual(minimum)
+          expect(analysis.sweeps).toBeLessThanOrEqual(maximum)
+          expect(countSolutions(puzzle.rowClues, puzzle.columnClues)).toBe(1)
 
-        if (difficulty !== 'beginner') {
-          expect([...puzzle.rowClues, ...puzzle.columnClues].every((clues) =>
-            clues.reduce((total, clue) => total + clue, 0) + clues.length - 1 < 10,
-          )).toBe(true)
+          if (difficulty !== 'beginner' && size > 5) {
+            expect([...puzzle.rowClues, ...puzzle.columnClues].every((clues) =>
+              clues.reduce((total, clue) => total + clue, 0) + clues.length - 1 < size,
+            )).toBe(true)
+          }
+
+          signatures.add(puzzle.solution.flat().join(''))
         }
 
-        signatures.add(puzzle.solution.flat().join(''))
-      }
-
-      expect(signatures.size).toBeGreaterThanOrEqual(9)
-    }, 30_000)
+        expect(signatures.size).toBeGreaterThanOrEqual(6)
+      }, 60_000)
+    }
   }
 })

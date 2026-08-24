@@ -53,22 +53,20 @@ export function PuzzleSetup({
             </div>
           </fieldset>
 
-          {size === 10 ? (
-            <fieldset>
-              <legend>Difficulty</legend>
-              <div className="boot-option-group">
-                {PUZZLE_DIFFICULTIES.map((level) => (
-                  <button
-                    aria-pressed={difficulty === level}
-                    key={level}
-                    onClick={() => onSelectDifficulty(level)}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-          ) : null}
+          <fieldset>
+            <legend>Difficulty</legend>
+            <div className="boot-option-group">
+              {PUZZLE_DIFFICULTIES.map((level) => (
+                <button
+                  aria-pressed={difficulty === level}
+                  key={level}
+                  onClick={() => onSelectDifficulty(level)}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
           <button
             aria-label={`Timer: ${timerLabel}`}

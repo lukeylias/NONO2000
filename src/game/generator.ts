@@ -13,7 +13,7 @@ interface GeneratorConfig {
 }
 
 const CONFIG: Record<BoardSize, GeneratorConfig> = {
-  5: { maxRuns: 2, symmetryChance: 1 },
+  5: { maxRuns: 2, symmetryChance: 0 },
   10: { maxRuns: 2, symmetryChance: 1 },
   15: { maxRuns: 3, symmetryChance: 0.5 },
 }
@@ -231,28 +231,113 @@ function generateSmallCandidate(seed: number, difficulty: PuzzleDifficulty): {
   return generateBlockSmallCandidate(seed)
 }
 
+function generateFiveCandidate(seed: number, difficulty: PuzzleDifficulty): {
+  grid: BinaryGrid
+  symmetry: 'none'
+} {
+  const size = 5
+  const difficultySalt = difficulty === 'beginner'
+    ? 0x243f6a88
+    : difficulty === 'standard' ? 0x85a308d3 : 0x13198a2e
+  const random = createRandom(seed ^ difficultySalt)
+  const grid = createEmptyGrid(size)
+  const targetCells = 9 + Math.floor(random() * 5)
+  const firstRow = Math.floor(random() * size)
+  const firstColumn = Math.floor(random() * size)
+  grid[firstRow][firstColumn] = 1
+  let filledCells = 1
+
+  while (filledCells < targetCells) {
+    const frontier = new Map<string, { row: number; column: number; neighbours: number }>()
+
+    for (let row = 0; row < size; row += 1) {
+      for (let column = 0; column < size; column += 1) {
+        if (grid[row][column] !== 1) continue
+        for (const [nextRow, nextColumn] of [
+          [row - 1, column],
+          [row + 1, column],
+          [row, column - 1],
+          [row, column + 1],
+        ]) {
+          if (
+            nextRow < 0 || nextRow >= size || nextColumn < 0 || nextColumn >= size
+            || grid[nextRow][nextColumn] === 1
+          ) continue
+          const key = `${nextRow}:${nextColumn}`
+          const current = frontier.get(key)
+          frontier.set(key, {
+            row: nextRow,
+            column: nextColumn,
+            neighbours: (current?.neighbours ?? 0) + 1,
+          })
+        }
+      }
+    }
+
+    const candidates = [...frontier.values()]
+    if (candidates.length === 0) break
+    const coveredRows = new Set<number>()
+    const coveredColumns = new Set<number>()
+    grid.forEach((row, rowIndex) => row.forEach((cell, columnIndex) => {
+      if (cell === 1) {
+        coveredRows.add(rowIndex)
+        coveredColumns.add(columnIndex)
+      }
+    }))
+
+    const scored = candidates.map((candidate) => {
+      const coverage = (coveredRows.has(candidate.row) ? 0 : 3)
+        + (coveredColumns.has(candidate.column) ? 0 : 3)
+      const shapeBias = difficulty === 'beginner'
+        ? candidate.neighbours * 1.35
+        : difficulty === 'hard' ? -candidate.neighbours * 0.55 : 0
+      return { candidate, score: coverage + shapeBias + random() * 3 }
+    })
+    scored.sort((left, right) => right.score - left.score)
+    const choicePool = difficulty === 'beginner' ? 2 : difficulty === 'standard' ? 3 : 5
+    const choice = scored[Math.floor(random() * Math.min(choicePool, scored.length))].candidate
+    grid[choice.row][choice.column] = 1
+    filledCells += 1
+  }
+
+  return { grid: random() < 0.5 ? grid : transposeGrid(grid), symmetry: 'none' }
+}
+
 function generateCandidate(size: BoardSize, seed: number, difficulty: PuzzleDifficulty): {
   grid: BinaryGrid
   symmetry: 'vertical' | 'none'
 } {
+  if (size === 5) return generateFiveCandidate(seed, difficulty)
   if (size === 10) return generateSmallCandidate(seed, difficulty)
 
   const random = createRandom(seed)
-  const symmetry = random() < CONFIG[size].symmetryChance ? 'vertical' : 'none'
+  const symmetry = difficulty === 'beginner' && random() < CONFIG[size].symmetryChance
+    ? 'vertical'
+    : 'none'
   const peakRow = Math.floor(randomBetween(random, size * 0.3, size * 0.7))
   const edgeWidth = randomBetween(random, size * 0.08, size * 0.24)
-  const curve = randomBetween(random, 0.48, 0.78)
+  const curve = difficulty === 'hard'
+    ? randomBetween(random, 0.62, 1.02)
+    : randomBetween(random, 0.48, 0.82)
   const spine = symmetry === 'vertical'
     ? (size - 1) / 2
     : Math.floor(randomBetween(random, size * 0.35, size * 0.65))
   const phase = randomBetween(random, 0, Math.PI * 2)
-  const frequency = randomBetween(random, 0.45, 0.95)
+  const frequency = difficulty === 'beginner'
+    ? randomBetween(random, 0.45, 0.95)
+    : randomBetween(random, 0.65, 1.35)
   const grid = createEmptyGrid(size)
+  let previousLeft = 0
+  let previousWidth = 0
 
   for (let row = 0; row < size; row += 1) {
     const furthest = row < peakRow ? Math.max(1, peakRow) : Math.max(1, size - 1 - peakRow)
     const distance = Math.abs(row - peakRow) / furthest
-    const rawWidth = size - (size - edgeWidth) * Math.pow(distance, curve)
+    const widestAllowed = difficulty === 'beginner' ? size : size - 1
+    const rawWidth = Math.min(
+      widestAllowed,
+      size - (size - edgeWidth) * Math.pow(distance, curve),
+    )
     const width = symmetry === 'vertical'
       ? makeOddOrEven(rawWidth, size)
       : Math.max(1, Math.min(size, Math.round(rawWidth)))
@@ -261,14 +346,23 @@ function generateCandidate(size: BoardSize, seed: number, difficulty: PuzzleDiff
     if (symmetry === 'vertical') {
       left = Math.floor((size - width) / 2)
     } else {
-      const drift = Math.sin(row * frequency + phase) * Math.min(size * 0.13, width * 0.35)
+      const driftScale = difficulty === 'hard' ? size * 0.24 : size * 0.17
+      const drift = Math.sin(row * frequency + phase) * Math.min(driftScale, width * 0.55)
       const idealLeft = Math.round(spine + drift - (width - 1) / 2)
       left = Math.max(0, Math.min(size - width, idealLeft))
-      left = Math.min(left, spine)
-      left = Math.max(left, spine - width + 1)
+      if (difficulty === 'beginner') {
+        left = Math.min(left, spine)
+        left = Math.max(left, spine - width + 1)
+      } else if (row > 0) {
+        const minimumOverlapLeft = Math.max(0, previousLeft - width + 1)
+        const maximumOverlapLeft = Math.min(size - width, previousLeft + previousWidth - 1)
+        left = Math.max(minimumOverlapLeft, Math.min(maximumOverlapLeft, left))
+      }
     }
 
     for (let column = left; column < left + width; column += 1) grid[row][column] = 1
+    previousLeft = left
+    previousWidth = width
   }
 
   return { grid, symmetry }
@@ -279,6 +373,7 @@ function lineResolvesImmediately(clues: readonly number[], lineLength: number): 
 }
 
 export function matchesPuzzleDifficulty(
+  size: BoardSize,
   difficulty: PuzzleDifficulty,
   rowClues: readonly number[][],
   columnClues: readonly number[][],
@@ -287,6 +382,31 @@ export function matchesPuzzleDifficulty(
   const lineLength = columnClues.length
   const analysis = analyzeLogicDifficulty(rowClues, columnClues)
   if (!analysis.solved) return false
+
+  if (size === 5) {
+    if (difficulty === 'beginner') return analysis.sweeps <= 3
+    if (difficulty === 'standard') {
+      return analysis.sweeps >= 4
+        && analysis.sweeps <= 5
+        && analysis.openingDeductions <= 10
+    }
+    return analysis.sweeps >= 6
+      && analysis.openingDeductions <= 8
+      && analysis.maxSweepDeductions <= 12
+  }
+
+  if (size === 15) {
+    if (difficulty === 'beginner') return analysis.sweeps <= 5
+    if (clues.some((line) => lineResolvesImmediately(line, lineLength))) return false
+    if (difficulty === 'standard') {
+      return analysis.sweeps >= 6
+        && analysis.sweeps <= 8
+        && analysis.openingDeductions <= 58
+    }
+    return analysis.sweeps >= 9
+      && analysis.openingDeductions <= 48
+      && analysis.maxSweepDeductions <= 80
+  }
 
   if (difficulty === 'beginner') return analysis.sweeps <= 4
   if (clues.some((line) => lineResolvesImmediately(line, lineLength))) return false
@@ -356,7 +476,7 @@ export function validatePuzzleCandidate(
 
   const logic = solveByLogic(rowClues, columnClues)
   if (!logic.solved || !boardMatchesSolution(logic.board, grid)) return null
-  if (size === 10 && !matchesPuzzleDifficulty(difficulty, rowClues, columnClues)) return null
+  if (!matchesPuzzleDifficulty(size, difficulty, rowClues, columnClues)) return null
   if (countSolutions(rowClues, columnClues) !== 1) return null
 
   return {

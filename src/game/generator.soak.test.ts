@@ -31,23 +31,25 @@ for (const size of [5, 10, 15] as BoardSize[]) {
   })
 }
 
-describe('10×10 difficulty soak', () => {
-  for (const difficulty of ['beginner', 'standard', 'hard'] as PuzzleDifficulty[]) {
-    it(`validates ${samples} ${difficulty} puzzles`, () => {
-      const signatures = new Set<string>()
+describe('all-size difficulty soak', () => {
+  for (const size of [5, 10, 15] as BoardSize[]) {
+    for (const difficulty of ['beginner', 'standard', 'hard'] as PuzzleDifficulty[]) {
+      it(`validates ${samples} ${size}×${size} ${difficulty} puzzles`, () => {
+        const signatures = new Set<string>()
 
-      for (let index = 0; index < samples; index += 1) {
-        const startSeed = (Math.imul(index + 1, 0x27d4eb2d) ^ 0x9e3779b9) >>> 0
-        const puzzle = generatePuzzleSync(10, startSeed, 100_000, difficulty)
-        const logic = solveByLogic(puzzle.rowClues, puzzle.columnClues)
+        for (let index = 0; index < samples; index += 1) {
+          const startSeed = (Math.imul(index + 1, 0x27d4eb2d) ^ 0x9e3779b9) >>> 0
+          const puzzle = generatePuzzleSync(size, startSeed, 500_000, difficulty)
+          const logic = solveByLogic(puzzle.rowClues, puzzle.columnClues)
 
-        expect(logic.solved).toBe(true)
-        expect(boardMatchesSolution(logic.board, puzzle.solution)).toBe(true)
-        expect(countSolutions(puzzle.rowClues, puzzle.columnClues)).toBe(1)
-        signatures.add(puzzle.solution.flat().join(''))
-      }
+          expect(logic.solved).toBe(true)
+          expect(boardMatchesSolution(logic.board, puzzle.solution)).toBe(true)
+          expect(countSolutions(puzzle.rowClues, puzzle.columnClues)).toBe(1)
+          signatures.add(puzzle.solution.flat().join(''))
+        }
 
-      expect(signatures.size).toBeGreaterThanOrEqual(Math.ceil(samples * 0.75))
-    }, samples === 100 ? 120_000 : 30_000)
+        expect(signatures.size).toBeGreaterThanOrEqual(Math.ceil(samples * 0.75))
+      }, samples === 100 ? 120_000 : 30_000)
+    }
   }
 })

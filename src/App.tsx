@@ -24,6 +24,7 @@ import { gameMusic } from './game/music'
 import { nono2000Sound, type SoundCue } from './game/sound'
 import {
   BOARD_SIZES,
+  PUZZLE_DIFFICULTIES,
   createMarkGrid,
   type BoardSize,
   type CellMark,
@@ -267,7 +268,7 @@ export function App() {
   const chooseDifficulty = (nextDifficulty: PuzzleDifficulty) => {
     clickThen(() => {
       setDifficulty(nextDifficulty)
-      if (booted && size === 10) requestPuzzle(size, nextDifficulty)
+      if (booted) requestPuzzle(size, nextDifficulty)
     })
   }
 
@@ -287,7 +288,7 @@ export function App() {
       </header>
 
       <div className="game-topline">
-        <p>{size === 10 ? `${difficulty} · ` : ''}{size}×{size} grid</p>
+        <p>{difficulty} · {size}×{size} grid</p>
         <div className="quick-size-switcher" aria-label="Grid size">
           {BOARD_SIZES.map((boardSize) => (
             <button
@@ -296,6 +297,17 @@ export function App() {
               onClick={() => chooseSize(boardSize)}
             >
               {boardSize}×{boardSize}
+            </button>
+          ))}
+        </div>
+        <div className="quick-difficulty-switcher" aria-label="Difficulty">
+          {PUZZLE_DIFFICULTIES.map((level) => (
+            <button
+              aria-pressed={difficulty === level}
+              key={level}
+              onClick={() => chooseDifficulty(level)}
+            >
+              {level}
             </button>
           ))}
         </div>

@@ -150,6 +150,7 @@ a:focus-visible {
 }
 
 .quick-size-switcher,
+.quick-difficulty-switcher,
 .result-size-switcher {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -158,6 +159,7 @@ a:focus-visible {
 }
 
 .quick-size-switcher button,
+.quick-difficulty-switcher button,
 .result-size-switcher button {
   min-height: 31px;
   padding: 4px 5px;
@@ -171,10 +173,15 @@ a:focus-visible {
 }
 
 .quick-size-switcher button[aria-pressed="true"],
+.quick-difficulty-switcher button[aria-pressed="true"],
 .result-size-switcher button[aria-pressed="true"] {
   border-color: var(--retro-blue);
   background: #dff8fc;
   color: var(--retro-blue-deep);
+}
+
+.quick-difficulty-switcher button {
+  text-transform: capitalize;
 }
 
 .panel-game-actions {
@@ -909,7 +916,7 @@ a:focus-visible {
       calc((100vh - 330px) / var(--grid-size))
     );
     grid-template-columns: 260px max-content 16px;
-    grid-template-rows: 220px max-content 16px;
+    grid-template-rows: 260px max-content 16px;
   }
 
   .column-clue,
