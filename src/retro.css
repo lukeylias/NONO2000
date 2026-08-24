@@ -12,6 +12,14 @@
   --retro-page: #eef7f8;
   --retro-display: var(--app-font);
   --retro-mono: var(--app-font);
+  --chrome-border: #96aab3;
+  --chrome-border-active: #5d9eae;
+  --chrome-face: #edf7fa;
+  --chrome-face-hover: #e1f4f8;
+  --chrome-face-pressed: #ccecf3;
+  --chrome-highlight: #ffffff;
+  --chrome-lowlight: #c6dfe6;
+  --chrome-text: #50616a;
   color: var(--retro-ink);
   background: var(--retro-page);
   font-family: var(--app-font);
@@ -92,21 +100,40 @@ a:focus-visible {
 
 .terminal-title strong {
   display: block;
-  padding: 9px 16px 8px;
-  border-radius: 13px 13px 8px 8px;
-  background: var(--retro-dark);
+  width: fit-content;
+  padding: 0;
+  background: transparent;
   color: #ffffff;
-  font-family: var(--retro-mono);
-  font-size: clamp(15px, 1.35vw, 20px);
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  line-height: 1;
-  text-align: center;
-  white-space: nowrap;
 }
 
 .terminal-title strong::after {
   content: none;
+}
+
+.brand-logo {
+  position: relative;
+  display: block;
+  line-height: 0;
+}
+
+.brand-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.brand-logo-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.brand-logo-header {
+  width: clamp(136px, 14vw, 180px);
 }
 
 .menu-trigger {
@@ -191,7 +218,8 @@ a:focus-visible {
   margin-bottom: 7px;
 }
 
-.panel-game-actions button {
+.panel-game-actions button,
+.panel-quick-settings button {
   min-height: 31px;
   padding: 4px 5px;
   border: 2px solid #dedfdf;
@@ -210,13 +238,42 @@ a:focus-visible {
   color: var(--retro-blue-deep);
 }
 
-.panel-game-actions .timer-mode-toggle.is-relaxed {
+.panel-quick-settings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 7px;
+}
+
+.panel-quick-settings button {
+  display: grid;
+  place-content: center;
+  gap: 1px;
+  text-align: center;
+}
+
+.panel-quick-settings button span {
+  font-size: 7px;
+  letter-spacing: 0.06em;
+}
+
+.panel-quick-settings button strong {
+  font-size: 8px;
+}
+
+.panel-quick-settings button[aria-pressed="true"] {
+  border-color: var(--retro-blue);
+  background: #dff8fc;
+  color: var(--retro-blue-deep);
+}
+
+.panel-quick-settings .timer-mode-toggle.is-relaxed {
   border-color: #f0ca5e;
   background: #fff9e8;
   color: #886a12;
 }
 
-.panel-game-actions .timer-mode-toggle.is-timed {
+.panel-quick-settings .timer-mode-toggle.is-timed {
   border-color: var(--retro-blue);
   background: #dff8fc;
   color: var(--retro-blue-deep);
@@ -255,13 +312,14 @@ a:focus-visible {
 .timer-wrap {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 52px;
-  gap: 6px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
 }
 
 .timer {
+  grid-column: 1 / 3;
   min-width: 0;
-  min-height: 68px;
+  min-height: 61px;
   display: grid;
   align-content: center;
   border-color: #e5e6e5;
@@ -289,7 +347,7 @@ a:focus-visible {
 
 .timer-pause-button {
   display: grid;
-  min-width: 52px;
+  min-width: 0;
   padding: 0;
   place-items: center;
   border: 2px solid #dedfdf;
@@ -312,7 +370,7 @@ a:focus-visible {
 }
 
 .timer-wrap .time-penalty {
-  right: 58px;
+  right: calc(33.333% + 4px);
 }
 
 .game-main {
@@ -832,6 +890,13 @@ a:focus-visible {
   backdrop-filter: blur(3px);
 }
 
+.setup-modal {
+  width: min(610px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .command-menu,
 .modal-card {
   border: 5px solid rgba(255, 255, 255, 0.68);
@@ -874,20 +939,11 @@ a:focus-visible {
 
 .boot-console h1 {
   display: block;
-  width: min(100%, 520px);
+  width: min(84%, 420px);
   margin: 12px 0;
   margin-inline: auto;
-  padding: 12px clamp(14px, 3vw, 25px) 11px;
-  border-radius: 15px;
-  background: var(--retro-dark);
-  color: #ffffff;
-  font-family: var(--retro-mono);
-  font-size: clamp(34px, 6vw, 62px);
-  font-weight: 700;
-  letter-spacing: clamp(0.06em, 0.8vw, 0.12em);
-  line-height: 1;
-  text-align: center;
-  white-space: nowrap;
+  padding: 0;
+  background: transparent;
 }
 
 .boot-console h1::after {
@@ -904,6 +960,255 @@ a:focus-visible {
 .boot-toggle-group button,
 .boot-menu button {
   border-radius: 8px;
+}
+
+/* Subtle XP-era interface chrome. Puzzle cells and clues are intentionally excluded. */
+.boot-menu button,
+.menu-trigger,
+.terminal-close,
+.icon-button,
+.boot-option-group button,
+.setup-timer,
+.quick-size-switcher button,
+.quick-difficulty-switcher button,
+.result-size-switcher button,
+.panel-game-actions button,
+.panel-quick-settings button,
+.timer-pause-button,
+.paint-mode-selector button,
+.button,
+.command-sizes button,
+.command-difficulties button,
+.command-toggles button,
+.command-actions button {
+  border: 1px solid var(--chrome-border);
+  border-radius: 7px;
+  background: var(--chrome-face);
+  box-shadow:
+    inset 0 1px 0 var(--chrome-highlight),
+    inset 0 -2px 0 var(--chrome-lowlight),
+    0 2px 0 rgba(106, 124, 132, 0.16);
+  color: var(--chrome-text);
+  transition:
+    border-color 100ms ease,
+    background 100ms ease,
+    box-shadow 100ms ease,
+    color 100ms ease,
+    transform 100ms ease;
+}
+
+.boot-menu button:hover,
+.menu-trigger:hover,
+.terminal-close:hover,
+.icon-button:hover,
+.boot-option-group button:hover,
+.setup-timer:hover,
+.quick-size-switcher button:hover,
+.quick-difficulty-switcher button:hover,
+.result-size-switcher button:hover,
+.panel-game-actions button:hover,
+.panel-quick-settings button:hover,
+.timer-pause-button:hover,
+.paint-mode-selector button:hover,
+.button:hover,
+.command-sizes button:hover,
+.command-difficulties button:hover,
+.command-toggles button:hover,
+.command-actions button:hover {
+  border-color: var(--chrome-border-active);
+  background: var(--chrome-face-hover);
+  color: #246f83;
+  transform: translateY(-1px);
+}
+
+.boot-menu button:active,
+.menu-trigger:active,
+.terminal-close:active,
+.icon-button:active,
+.boot-option-group button:active,
+.setup-timer:active,
+.quick-size-switcher button:active,
+.quick-difficulty-switcher button:active,
+.result-size-switcher button:active,
+.panel-game-actions button:active,
+.panel-quick-settings button:active,
+.timer-pause-button:active,
+.paint-mode-selector button:active,
+.button:active,
+.command-sizes button:active,
+.command-difficulties button:active,
+.command-toggles button:active,
+.command-actions button:active {
+  box-shadow:
+    inset 0 2px 3px rgba(60, 86, 97, 0.16),
+    inset 0 -1px 0 var(--chrome-highlight);
+  transform: translateY(1px);
+}
+
+.boot-menu button[aria-pressed="true"],
+.boot-option-group button[aria-pressed="true"],
+.quick-size-switcher button[aria-pressed="true"],
+.quick-difficulty-switcher button[aria-pressed="true"],
+.result-size-switcher button[aria-pressed="true"],
+.panel-quick-settings button[aria-pressed="true"],
+.timer-pause-button.is-paused,
+.paint-mode-selector .paint-mode-fill[aria-pressed="true"],
+.command-sizes button[aria-pressed="true"],
+.command-difficulties button[aria-pressed="true"],
+.command-toggles button[aria-pressed="true"] {
+  border-color: var(--chrome-border-active);
+  background: var(--chrome-face-pressed);
+  box-shadow:
+    inset 0 2px 3px rgba(62, 114, 128, 0.16),
+    inset 0 -1px 0 var(--chrome-highlight),
+    0 1px 0 rgba(106, 124, 132, 0.12);
+  color: #176a80;
+}
+
+.paint-mode-selector .paint-mode-cross[aria-pressed="true"] {
+  border-color: #d39a61;
+  background: #f8e5d3;
+  box-shadow:
+    inset 0 2px 3px rgba(145, 91, 43, 0.12),
+    inset 0 -1px 0 var(--chrome-highlight),
+    0 1px 0 rgba(106, 124, 132, 0.12);
+  color: #99510f;
+}
+
+.boot-start,
+.button.primary,
+.result-actions .button.primary,
+.panel-game-actions button.is-primary {
+  border: 1px solid #278da3;
+  border-radius: 7px;
+  background: #56bbcc;
+  box-shadow:
+    inset 0 1px 0 #d9fbff,
+    inset 0 -3px 0 #2695aa,
+    0 3px 0 rgba(83, 116, 125, 0.24);
+  color: #ffffff;
+  text-shadow: 0 1px 0 rgba(34, 88, 100, 0.48);
+}
+
+.boot-start:hover,
+.button.primary:hover,
+.result-actions .button.primary:hover,
+.panel-game-actions button.is-primary:hover {
+  border-color: #1d7f95;
+  background: #4bafc1;
+  box-shadow:
+    inset 0 1px 0 #dcfbff,
+    inset 0 -3px 0 #22889d,
+    0 4px 0 rgba(83, 116, 125, 0.22);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.boot-start:active,
+.button.primary:active,
+.result-actions .button.primary:active,
+.panel-game-actions button.is-primary:active {
+  box-shadow:
+    inset 0 2px 4px rgba(19, 87, 102, 0.28),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.48);
+  transform: translateY(2px);
+}
+
+.boot-option-group {
+  border: 1px solid #a9bac1;
+  border-radius: 9px;
+  background: #e9f1f3;
+  box-shadow:
+    inset 0 1px 2px rgba(67, 88, 96, 0.12),
+    0 1px 0 #ffffff;
+}
+
+.setup-timer,
+.timer,
+.command-audio-group {
+  border: 1px solid #a9bac1;
+  border-radius: 8px;
+  background: #f5fafb;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    inset 0 -2px 0 #dbe9ed;
+}
+
+.setup-timer.is-timed,
+.panel-quick-settings .timer-mode-toggle.is-timed,
+.timer.is-paused {
+  border-color: #70aebe;
+  background: #dff2f6;
+}
+
+.setup-timer.is-relaxed,
+.panel-quick-settings .timer-mode-toggle.is-relaxed {
+  border-color: #c6ad64;
+  background: #f8f2d9;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    inset 0 -2px 0 #e8dba9;
+}
+
+.command-backdrop,
+.modal-backdrop {
+  background: rgba(51, 62, 69, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.command-menu,
+.modal-card {
+  border: 1px solid #879da7;
+  border-radius: 10px;
+  background: #f8fbfc;
+  box-shadow:
+    inset 0 0 0 3px #e8f1f4,
+    0 3px 0 rgba(55, 75, 84, 0.28),
+    0 18px 46px rgba(29, 57, 60, 0.28);
+}
+
+.command-heading,
+.modal-heading {
+  margin-bottom: 22px;
+  padding: 12px 14px;
+  border: 1px solid #9fb5be;
+  border-radius: 7px;
+  background: #dceff4;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    inset 0 -2px 0 #bfdce4;
+}
+
+.command-heading p,
+.modal-heading .eyebrow {
+  color: #4b7d8b;
+}
+
+.command-group legend,
+.command-audio-group > p,
+.boot-options legend {
+  color: #64777f;
+}
+
+.command-actions {
+  border-top: 1px solid #aebfc6;
+  box-shadow: inset 0 1px 0 #ffffff;
+}
+
+.command-actions button.is-danger {
+  border-color: #c79b9f;
+  background: #f7e9ea;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    inset 0 -2px 0 #ecd0d3,
+    0 2px 0 rgba(106, 124, 132, 0.12);
+  color: #a14750;
+}
+
+.command-actions button.is-danger:hover {
+  border-color: #b16e76;
+  background: #f4dfe1;
+  color: #983c46;
 }
 
 @keyframes halftone-lock {
@@ -1000,20 +1305,23 @@ a:focus-visible {
   }
 
   .terminal-title strong {
-    padding: 8px 12px 7px;
-    font-size: 16px;
+    padding: 0;
   }
 
-  .terminal-title span {
+  .terminal-title > span:not(.brand-logo) {
     display: none;
+  }
+
+  .brand-logo-header {
+    width: 138px;
   }
 
   .game-topline > p {
-    display: none;
+    display: block;
   }
 
   .session-metrics {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 
   .game-main {

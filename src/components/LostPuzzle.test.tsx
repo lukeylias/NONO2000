@@ -5,16 +5,19 @@ import { LostPuzzle } from './LostPuzzle'
 describe('LostPuzzle', () => {
   it('offers retry and a new puzzle after the countdown finishes', () => {
     const retry = vi.fn()
-    const newPuzzle = vi.fn()
-    render(<LostPuzzle onNewPuzzle={newPuzzle} onRetry={retry} />)
+    const newGame = vi.fn()
+    const nextPuzzle = vi.fn()
+    render(<LostPuzzle onNewGame={newGame} onNextPuzzle={nextPuzzle} onRetry={retry} />)
 
     expect(screen.getByRole('heading', { name: 'Time over.' })).toBeInTheDocument()
     expect(screen.getByLabelText('Countdown finished')).toHaveTextContent('0:00.0')
 
+    fireEvent.click(screen.getByRole('button', { name: 'New' }))
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
-    fireEvent.click(screen.getByRole('button', { name: 'New puzzle' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
 
+    expect(newGame).toHaveBeenCalledOnce()
     expect(retry).toHaveBeenCalledOnce()
-    expect(newPuzzle).toHaveBeenCalledOnce()
+    expect(nextPuzzle).toHaveBeenCalledOnce()
   })
 })

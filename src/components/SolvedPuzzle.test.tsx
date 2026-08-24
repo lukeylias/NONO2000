@@ -18,14 +18,16 @@ const puzzle: Puzzle = {
 }
 
 describe('SolvedPuzzle', () => {
-  it('shows a clean result and lets the player choose the next grid size', () => {
-    const selectSize = vi.fn()
+  it('shows a clean result and offers the shared puzzle actions', () => {
+    const newGame = vi.fn()
+    const nextPuzzle = vi.fn()
+    const replay = vi.fn()
     render(
       <SolvedPuzzle
         elapsed={42_300}
-        onNewPuzzle={vi.fn()}
-        onReplay={vi.fn()}
-        onSelectSize={selectSize}
+        onNewGame={newGame}
+        onNextPuzzle={nextPuzzle}
+        onReplay={replay}
         puzzle={puzzle}
       />,
     )
@@ -35,8 +37,15 @@ describe('SolvedPuzzle', () => {
     expect(screen.getByText('Clean solve')).toBeInTheDocument()
     expect(screen.queryByText(/credits/i)).not.toBeInTheDocument()
     expect(screen.queryByText('Systems')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '5×5' }))
-    expect(selectSize).toHaveBeenCalledWith(5)
+    expect(screen.queryByRole('group', { name: 'Next grid size' })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'New' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Replay' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+
+    expect(newGame).toHaveBeenCalledOnce()
+    expect(replay).toHaveBeenCalledOnce()
+    expect(nextPuzzle).toHaveBeenCalledOnce()
   })
 
   it('shows the mistake count and marks each mistaken cell in the revealed grid', () => {
@@ -44,9 +53,9 @@ describe('SolvedPuzzle', () => {
       <SolvedPuzzle
         elapsed={42_300}
         mistakeCells={new Set(['0:0', '0:1'])}
-        onNewPuzzle={vi.fn()}
+        onNewGame={vi.fn()}
+        onNextPuzzle={vi.fn()}
         onReplay={vi.fn()}
-        onSelectSize={vi.fn()}
         puzzle={puzzle}
       />,
     )
@@ -61,9 +70,9 @@ describe('SolvedPuzzle', () => {
     render(
       <SolvedPuzzle
         elapsed={42_300}
-        onNewPuzzle={vi.fn()}
+        onNewGame={vi.fn()}
+        onNextPuzzle={vi.fn()}
         onReplay={vi.fn()}
-        onSelectSize={vi.fn()}
         puzzle={puzzle}
         showTime={false}
       />,

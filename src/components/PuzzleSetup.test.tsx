@@ -58,4 +58,26 @@ describe('PuzzleSetup', () => {
     expect(start).toHaveBeenCalledOnce()
     expect(back).toHaveBeenCalledOnce()
   })
+
+  it('reuses the setup as a dismissible modal', () => {
+    const back = vi.fn()
+
+    render(
+      <PuzzleSetup
+        difficulty="beginner"
+        onBack={back}
+        onCycleTimer={vi.fn()}
+        onSelectDifficulty={vi.fn()}
+        onSelectSize={vi.fn()}
+        onStart={vi.fn()}
+        presentation="modal"
+        size={5}
+        timerMinutes={1}
+      />,
+    )
+
+    expect(screen.getByRole('dialog', { name: 'Set the grid' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(back).toHaveBeenCalledOnce()
+  })
 })

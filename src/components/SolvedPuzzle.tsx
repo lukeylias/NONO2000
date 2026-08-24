@@ -1,14 +1,14 @@
 import { formatElapsed } from '../game/play'
-import { BOARD_SIZES, type BoardSize, type Puzzle } from '../game/types'
+import type { Puzzle } from '../game/types'
 
 interface SolvedPuzzleProps {
   puzzle: Puzzle
   elapsed: number
   mistakeCells?: ReadonlySet<string>
   showTime?: boolean
+  onNewGame: () => void
+  onNextPuzzle: () => void
   onReplay: () => void
-  onNewPuzzle: () => void
-  onSelectSize: (size: BoardSize) => void
 }
 
 const EMPTY_MISTAKES = new Set<string>()
@@ -18,9 +18,9 @@ export function SolvedPuzzle({
   elapsed,
   mistakeCells = EMPTY_MISTAKES,
   showTime = true,
+  onNewGame,
+  onNextPuzzle,
   onReplay,
-  onNewPuzzle,
-  onSelectSize,
 }: SolvedPuzzleProps) {
   const mistakeCount = mistakeCells.size
   const isPerfect = mistakeCount === 0
@@ -69,20 +69,10 @@ export function SolvedPuzzle({
         </div>
         {showTime ? <p className="result-time">{formatElapsed(elapsed)}</p> : null}
         <p className="result-detail">{puzzle.size}×{puzzle.size} grid</p>
-        <div className="result-size-switcher" aria-label="Next grid size">
-          {BOARD_SIZES.map((boardSize) => (
-            <button
-              aria-pressed={puzzle.size === boardSize}
-              key={boardSize}
-              onClick={() => onSelectSize(boardSize)}
-            >
-              {boardSize}×{boardSize}
-            </button>
-          ))}
-        </div>
         <div className="result-actions">
+          <button className="button secondary" onClick={onNewGame}>New</button>
           <button className="button secondary" onClick={onReplay}>Replay</button>
-          <button className="button primary" onClick={onNewPuzzle}>New puzzle</button>
+          <button className="button primary" onClick={onNextPuzzle}>Next</button>
         </div>
       </div>
     </section>

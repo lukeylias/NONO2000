@@ -1,4 +1,4 @@
-[![Watch NONO2000 gameplay](./docs/assets/nono2000-demo-poster.png)](./docs/assets/nono2000-demo.mp4)
+![NONO2000 gameplay](./docs/assets/nono2000-demo.gif)
 
 # NONO2000
 

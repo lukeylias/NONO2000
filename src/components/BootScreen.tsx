@@ -1,3 +1,5 @@
+import { BrandLogo } from './BrandLogo'
+
 interface BootScreenProps {
   musicOn: boolean
   soundOn: boolean
@@ -21,7 +23,9 @@ export function BootScreen({
     <main className="boot-screen">
       <section className="boot-console" aria-labelledby="boot-title">
         <p className="boot-status">Picture logic system</p>
-        <h1 id="boot-title">NONO2000</h1>
+        <h1 id="boot-title">
+          <BrandLogo variant="boot" />
+        </h1>
         <p className="boot-line">Nostalgic 2000s nonogram vibes.</p>
 
         <button className="boot-start" onClick={onStart}>

@@ -203,7 +203,7 @@ button:active { transform: translateY(2px); }
 .terminal-title { display: flex; align-items: baseline; gap: 12px; }
 .terminal-title strong { color: var(--ink); font-size: 25px; font-weight: 850; letter-spacing: -0.04em; }
 .terminal-title strong::after { content: "."; color: var(--orange); }
-.terminal-title span, .terminal-status { color: var(--ink-soft); font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.terminal-title > span:not(.brand-logo), .terminal-status { color: var(--ink-soft); font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
 .terminal-status { display: flex; align-items: center; gap: 8px; }
 .status-lamp { width: 9px; height: 9px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 4px rgba(103, 213, 199, 0.2); animation: status-pop 1.8s ease-in-out infinite; }
 .status-lamp.is-lost { background: var(--error); box-shadow: 0 0 0 4px rgba(239, 79, 95, 0.18); }
@@ -529,7 +529,7 @@ h2 { margin: 0; color: var(--ink); font-size: 28px; font-weight: 850; letter-spa
   .boot-menu { flex-direction: column; }
   .boot-menu button { width: 100%; }
   .terminal-header { min-height: 62px; padding: 9px 14px; }
-  .terminal-title span { display: none; }
+  .terminal-title > span:not(.brand-logo) { display: none; }
   .terminal-title strong { font-size: 22px; }
   .menu-trigger { min-height: 38px; padding-inline: 12px; }
   .game-main { padding: 8px 6px 14px; }

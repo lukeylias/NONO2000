@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { BrandLogo } from './components/BrandLogo'
 import { BootScreen } from './components/BootScreen'
 import { CommandMenu } from './components/CommandMenu'
 import { HowToPlay } from './components/HowToPlay'
@@ -23,8 +24,6 @@ import {
 import { gameMusic } from './game/music'
 import { nono2000Sound, type SoundCue } from './game/sound'
 import {
-  BOARD_SIZES,
-  PUZZLE_DIFFICULTIES,
   createMarkGrid,
   type BoardSize,
   type CellMark,
@@ -59,6 +58,9 @@ export function App() {
   const [soundOn, setSoundOn] = useState(true)
   const [musicOn, setMusicOn] = useState(true)
   const [timerMinutes, setTimerMinutes] = useState<TimerMinutes>(1)
+  const [setupSize, setSetupSize] = useState<BoardSize>(5)
+  const [setupDifficulty, setSetupDifficulty] = useState<PuzzleDifficulty>('beginner')
+  const [setupTimerMinutes, setSetupTimerMinutes] = useState<TimerMinutes>(1)
   const [isPaused, setIsPaused] = useState(false)
   const [timePenaltyPulse, setTimePenaltyPulse] = useState(0)
   const [mistakes, setMistakes] = useState<Set<string>>(() => new Set())
@@ -68,6 +70,7 @@ export function App() {
   const pausedElapsed = useRef(0)
   const soundEnabled = useRef(true)
   const musicEnabled = useRef(true)
+  const setupPausedGame = useRef(false)
   const countdownOn = timerMinutes > 0
 
   const playSound = useCallback((cue: SoundCue) => {
@@ -210,6 +213,13 @@ export function App() {
     if (booted) restartTimer()
   }
 
+  const pauseTimer = () => {
+    const frozenElapsed = performance.now() - startedAt.current
+    pausedElapsed.current = frozenElapsed
+    setElapsed(frozenElapsed)
+    setIsPaused(true)
+  }
+
   const togglePause = () => {
     if (!countdownOn || status !== 'playing') return
 
@@ -218,10 +228,7 @@ export function App() {
       return
     }
 
-    const frozenElapsed = performance.now() - startedAt.current
-    pausedElapsed.current = frozenElapsed
-    setElapsed(frozenElapsed)
-    setIsPaused(true)
+    pauseTimer()
   }
 
   const resumeTimer = () => {
@@ -239,12 +246,44 @@ export function App() {
     action()
   }
 
-  const startSession = () => {
-    clickThen(() => {
-      setShowSetup(false)
-      setBooted(true)
-      requestPuzzle(size)
-    })
+  const openSetup = () => {
+    setSetupSize(size)
+    setSetupDifficulty(difficulty)
+    setSetupTimerMinutes(timerMinutes)
+    setShowMenu(false)
+    setShowSetup(true)
+
+    const shouldPause = booted && countdownOn && status === 'playing' && !isPaused
+    setupPausedGame.current = shouldPause
+    if (shouldPause) pauseTimer()
+  }
+
+  const closeSetup = () => {
+    setShowSetup(false)
+    if (setupPausedGame.current && status === 'playing') resumeTimer()
+    setupPausedGame.current = false
+  }
+
+  const beginSetupPuzzle = () => {
+    setShowSetup(false)
+    setBooted(true)
+    setSize(setupSize)
+    setDifficulty(setupDifficulty)
+    setTimerMinutes(setupTimerMinutes)
+    setupPausedGame.current = false
+    requestPuzzle(setupSize, setupDifficulty)
+  }
+
+  const chooseSetupSize = (nextSize: BoardSize) => {
+    clickThen(() => setSetupSize(nextSize))
+  }
+
+  const chooseSetupDifficulty = (nextDifficulty: PuzzleDifficulty) => {
+    clickThen(() => setSetupDifficulty(nextDifficulty))
+  }
+
+  const cycleSetupTimer = () => {
+    clickThen(() => setSetupTimerMinutes((current) => cycleTimerMinutes(current)))
   }
 
   const disconnect = () => {
@@ -258,20 +297,7 @@ export function App() {
       setStatus('generating')
       setShowMenu(false)
       setShowSetup(false)
-    })
-  }
-
-  const chooseSize = (nextSize: BoardSize) => {
-    clickThen(() => {
-      if (booted) requestPuzzle(nextSize)
-      else setSize(nextSize)
-    })
-  }
-
-  const chooseDifficulty = (nextDifficulty: PuzzleDifficulty) => {
-    clickThen(() => {
-      setDifficulty(nextDifficulty)
-      if (booted) requestPuzzle(size, nextDifficulty)
+      setupPausedGame.current = false
     })
   }
 
@@ -283,7 +309,9 @@ export function App() {
     <aside className="system-panel" aria-label="Game system panel">
       <header className="terminal-header">
         <div className="terminal-title">
-          <strong>NONO2000</strong>
+          <strong>
+            <BrandLogo variant="header" />
+          </strong>
         </div>
         <button className="menu-trigger" onClick={() => clickThen(() => setShowMenu(true))}>
           Menu
@@ -292,39 +320,39 @@ export function App() {
 
       <div className="game-topline">
         <p>{difficulty} · {size}×{size} grid</p>
-        <div className="quick-size-switcher" aria-label="Grid size">
-          {BOARD_SIZES.map((boardSize) => (
-            <button
-              aria-pressed={size === boardSize}
-              key={boardSize}
-              onClick={() => chooseSize(boardSize)}
-            >
-              {boardSize}×{boardSize}
-            </button>
-          ))}
-        </div>
-        <div className="quick-difficulty-switcher" aria-label="Difficulty">
-          {PUZZLE_DIFFICULTIES.map((level) => (
-            <button
-              aria-pressed={difficulty === level}
-              key={level}
-              onClick={() => chooseDifficulty(level)}
-            >
-              {level}
-            </button>
-          ))}
-        </div>
-        <div className="panel-game-actions" aria-label="Grid actions">
-          <button onClick={() => clickThen(reset)}>Reset</button>
-          <button className="is-primary" onClick={() => clickThen(() => requestPuzzle(size))}>
+        <div className="panel-game-actions" aria-label="Puzzle actions">
+          <button className="is-primary" onClick={() => clickThen(openSetup)}>
             New
           </button>
+          <button onClick={() => clickThen(reset)}>Reset</button>
+          <button onClick={() => clickThen(() => requestPuzzle(size))}>
+            Next
+          </button>
+        </div>
+        <div className="panel-quick-settings" aria-label="Quick settings">
           <button
             aria-label={`Timer mode, ${timerModeLabel(timerMinutes)}`}
             className={`timer-mode-toggle ${countdownOn ? 'is-timed' : 'is-relaxed'}`}
             onClick={() => clickThen(cycleTimerMode)}
           >
-            {countdownOn ? `${timerMinutes} min timer` : 'Relaxed'}
+            <span>Timer</span>
+            <strong>{countdownOn ? `${timerMinutes} min` : 'Relaxed'}</strong>
+          </button>
+          <button
+            aria-label={`Sounds: ${soundOn ? 'On' : 'Off'}`}
+            aria-pressed={soundOn}
+            onClick={() => clickThen(toggleSound)}
+          >
+            <span>Sound</span>
+            <strong>{soundOn ? 'On' : 'Off'}</strong>
+          </button>
+          <button
+            aria-label={`Music: ${musicOn ? 'On' : 'Off'}`}
+            aria-pressed={musicOn}
+            onClick={() => clickThen(toggleMusic)}
+          >
+            <span>Music</span>
+            <strong>{musicOn ? 'On' : 'Off'}</strong>
           </button>
         </div>
         <div className="session-metrics">
@@ -367,25 +395,30 @@ export function App() {
     <>
       {showMenu ? (
         <CommandMenu
-          difficulty={difficulty}
           inSession={booted}
           onClose={() => clickThen(() => setShowMenu(false))}
           onDisconnect={disconnect}
-          onNewPuzzle={() => clickThen(() => requestPuzzle(size))}
-          onReset={() => clickThen(reset)}
           onRules={() => clickThen(() => {
             setShowMenu(false)
             setShowRules(true)
           })}
-          onSelectDifficulty={chooseDifficulty}
-          onSelectSize={chooseSize}
-          onCycleTimer={() => clickThen(cycleTimerMode)}
           onToggleMusic={() => clickThen(toggleMusic)}
           onToggleSound={toggleSound}
           musicOn={musicOn}
-          size={size}
           soundOn={soundOn}
-          timerMinutes={timerMinutes}
+        />
+      ) : null}
+      {booted && showSetup ? (
+        <PuzzleSetup
+          difficulty={setupDifficulty}
+          onBack={() => clickThen(closeSetup)}
+          onCycleTimer={cycleSetupTimer}
+          onSelectDifficulty={chooseSetupDifficulty}
+          onSelectSize={chooseSetupSize}
+          onStart={() => clickThen(beginSetupPuzzle)}
+          presentation="modal"
+          size={setupSize}
+          timerMinutes={setupTimerMinutes}
         />
       ) : null}
       {showRules ? <HowToPlay onClose={() => clickThen(() => setShowRules(false))} /> : null}
@@ -401,20 +434,20 @@ export function App() {
       >
         {showSetup ? (
           <PuzzleSetup
-            difficulty={difficulty}
-            onBack={() => clickThen(() => setShowSetup(false))}
-            onCycleTimer={() => clickThen(cycleTimerMode)}
-            onSelectDifficulty={chooseDifficulty}
-            onSelectSize={chooseSize}
-            onStart={startSession}
-            size={size}
-            timerMinutes={timerMinutes}
+            difficulty={setupDifficulty}
+            onBack={() => clickThen(closeSetup)}
+            onCycleTimer={cycleSetupTimer}
+            onSelectDifficulty={chooseSetupDifficulty}
+            onSelectSize={chooseSetupSize}
+            onStart={() => clickThen(beginSetupPuzzle)}
+            size={setupSize}
+            timerMinutes={setupTimerMinutes}
           />
         ) : (
           <BootScreen
             onConfigure={() => clickThen(() => setShowMenu(true))}
             onRules={() => clickThen(() => setShowRules(true))}
-            onStart={() => clickThen(() => setShowSetup(true))}
+            onStart={() => clickThen(openSetup)}
             onToggleMusic={() => clickThen(toggleMusic)}
             onToggleSound={toggleSound}
             musicOn={musicOn}
@@ -445,15 +478,16 @@ export function App() {
             <SolvedPuzzle
               elapsed={elapsed}
               mistakeCells={mistakes}
-              onNewPuzzle={() => clickThen(() => requestPuzzle(size))}
+              onNewGame={() => clickThen(openSetup)}
+              onNextPuzzle={() => clickThen(() => requestPuzzle(size))}
               onReplay={() => clickThen(reset)}
-              onSelectSize={chooseSize}
               puzzle={puzzle}
               showTime={countdownOn}
             />
           ) : status === 'lost' ? (
             <LostPuzzle
-              onNewPuzzle={() => clickThen(() => requestPuzzle(size))}
+              onNewGame={() => clickThen(openSetup)}
+              onNextPuzzle={() => clickThen(() => requestPuzzle(size))}
               onRetry={() => clickThen(reset)}
             />
           ) : (
