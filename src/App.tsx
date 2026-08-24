@@ -207,10 +207,15 @@ export function App() {
 
   const cycleTimerMode = () => {
     setTimerMinutes((current) => cycleTimerMinutes(current))
+
+    if (booted && puzzle) {
+      reset()
+      return
+    }
+
     setIsPaused(false)
     pausedElapsed.current = 0
     setTimePenaltyPulse(0)
-    if (booted) restartTimer()
   }
 
   const pauseTimer = () => {

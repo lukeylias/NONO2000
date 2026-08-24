@@ -126,12 +126,21 @@ describe('App puzzle controls', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Begin puzzle' }))
     await screen.findByRole('grid', { name: '5 by 5 puzzle grid' })
 
-    const sound = screen.getByRole('button', { name: 'Sounds: On' })
-    const music = screen.getByRole('button', { name: 'Music: On' })
-    expect(screen.getByRole('button', { name: 'Timer mode, 1 minute' })).toBeInTheDocument()
+    const timer = screen.getByRole('button', { name: 'Timer mode, 1 minute' })
 
-    fireEvent.click(sound)
-    fireEvent.click(music)
+    fireEvent.pointerDown(
+      screen.getByRole('gridcell', { name: 'Row 1, column 1, unknown' }),
+      { button: 0, isPrimary: true, pointerType: 'mouse' },
+    )
+    fireEvent.pointerUp(window)
+    expect(screen.getByRole('gridcell', { name: 'Row 1, column 1, filled' })).toBeInTheDocument()
+
+    fireEvent.click(timer)
+    expect(screen.getByRole('button', { name: 'Timer mode, 2 minutes' })).toBeInTheDocument()
+    expect(screen.getByRole('gridcell', { name: 'Row 1, column 1, unknown' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sounds: On' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Music: On' }))
 
     expect(screen.getByRole('button', { name: 'Sounds: Off' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: 'Music: Off' })).toHaveAttribute('aria-pressed', 'false')
