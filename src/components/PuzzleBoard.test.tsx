@@ -54,13 +54,14 @@ describe('PuzzleBoard', () => {
   it('lets touch users select Cross as the primary mark', () => {
     render(<TouchModeHarness />)
 
-    const fillMode = screen.getByRole('button', { name: 'Fill' })
-    const crossMode = screen.getByRole('button', { name: 'Cross' })
-    expect(fillMode).toHaveAttribute('aria-pressed', 'true')
+    const markMode = screen.getByRole('switch', { name: 'Primary mark: Fill' })
+    expect(markMode).toHaveAttribute('aria-checked', 'true')
 
-    fireEvent.click(crossMode)
-    expect(crossMode).toHaveAttribute('aria-pressed', 'true')
-    expect(fillMode).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(markMode)
+    expect(screen.getByRole('switch', { name: 'Primary mark: Cross' })).toHaveAttribute(
+      'aria-checked',
+      'false',
+    )
 
     fireEvent.pointerDown(
       screen.getByRole('gridcell', { name: 'Row 1, column 2, unknown' }),
@@ -71,7 +72,7 @@ describe('PuzzleBoard', () => {
     expect(screen.getByRole('gridcell', { name: 'Row 1, column 2, crossed' })).toBeInTheDocument()
   })
 
-  it('keeps mouse left-click on Fill when Cross is selected', () => {
+  it('uses the selected primary mark for mouse input', () => {
     const paint = vi.fn()
     render(
       <PuzzleBoard
@@ -84,12 +85,18 @@ describe('PuzzleBoard', () => {
     )
 
     fireEvent.pointerDown(
-      screen.getByRole('gridcell', { name: 'Row 1, column 1, unknown' }),
+      screen.getByRole('gridcell', { name: 'Row 1, column 2, unknown' }),
       { button: 0, isPrimary: true, pointerType: 'mouse' },
     )
     fireEvent.pointerUp(window)
 
-    expect(paint).toHaveBeenCalledWith(0, 0, 'filled')
+    expect(paint).toHaveBeenCalledWith(0, 1, 'crossed')
+  })
+
+  it('shows three hints as unavailable without making the control interactive', () => {
+    render(<TouchModeHarness />)
+
+    expect(screen.getByRole('button', { name: 'Hints unavailable, 3 remaining' })).toBeDisabled()
   })
 
   it('locks a filled cell after it is painted', () => {

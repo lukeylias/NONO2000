@@ -112,3 +112,69 @@ Final result: passed
 - P3: a future pass could tune the primary aqua button saturation after extended play, but the current contrast and hierarchy are appropriate for this brief.
 
 Final result: passed
+
+---
+
+# Board tools design QA
+
+- Source visual truth: `/var/folders/pp/b_4hc1_s21nbqbj3tb4xwfzm0000gp/T/codex-clipboard-9caa392e-b25b-4f57-8951-ebbfbaefe394.png`
+- Browser-rendered implementation: `/private/tmp/nono2000-board-tools-full.png`
+- Focused implementation capture: `/private/tmp/nono2000-board-tools-tight.png`
+- Side-by-side comparison: `/private/tmp/nono2000-board-tools-comparison.png`
+- Cross and Fill inset comparison: `/private/tmp/nono2000-switch-state-comparison.png`
+- Viewport: 1015 x 1089 CSS px at 1x density
+- Source pixels: 784 x 264
+- Full implementation pixels: 1015 x 1089
+- Focused implementation pixels: 226 x 80
+- State: 5 x 5 game board, Fill selected, three hints visible and disabled
+
+## Findings
+
+No actionable P0, P1, or P2 differences remain.
+
+- The implementation keeps the source composition: a two-position rounded mark switch followed by a separate circular hint control with a count badge.
+- The app uses its existing pale cyan palette instead of the source's dark palette. This is intentional and keeps the new controls consistent with NONO2000.
+- The hint control is deliberately disabled. Its icon and three-use count remain readable without suggesting that hint behavior is ready.
+
+## Required fidelity surfaces
+
+- Fonts and typography: The controls use icons and the numeric hint badge only. The badge uses the existing Figtree UI font at the same weight as other compact game controls.
+- Spacing and layout rhythm: Both switch halves measure 60px wide with a 5px inset before borders. Both icons measure 25 x 25px. The 52 x 52px hint control is circular, and the switch uses a full pill radius.
+- Colors and visual tokens: The translucent cyan switch and pale amber hint treatment use the existing game palette. Borders are quiet and shadows were removed so the controls sit in the board background instead of looking embossed.
+- Image quality and asset fidelity: X, square, and lightbulb marks use Phosphor vector icons. No text glyphs, CSS-drawn icons, or raster placeholders are used.
+- Copy and content: Visual labels remain icon-only to match the reference. Accessible labels expose `Primary mark: Fill`, `Primary mark: Cross`, and `Hints unavailable, 3 remaining`.
+
+## Full-view comparison
+
+The board remains the dominant element. The new controls sit centered beneath it without changing the board, clue layout, system panel, or game-container padding. The final full screenshot shows no clipping or overlap.
+
+## Focused comparison
+
+The side-by-side comparison confirms the same control grouping, rounded silhouette, selected fill state, lightbulb hint icon, and three-use badge. The implementation is intentionally lighter and less contrast-heavy to fit the existing screen.
+
+## Comparison history
+
+1. The first pass used XP-style inset shadows and read as embossed. Removed the shadows and changed both controls to flat translucent surfaces.
+2. The active icon used a 1.05 scale, which made the selected half look uneven. Removed scaling and verified equal option and icon dimensions in the rendered DOM.
+3. A backdrop blur caused a browser compositing artifact during capture. Removed the blur and recaptured the full screen with the system panel, board, and controls intact.
+4. The sliding panel used content-box sizing, so its border reduced the right-side inset in Fill mode. Changed it to border-box sizing, captured both states from the same clip, and confirmed matching 60px panels with equal edge insets.
+
+## Interaction checks
+
+- Fill and Cross toggle in both directions.
+- The selected mark applies to mouse and touch primary input.
+- The control exposes the selected state through `aria-checked`.
+- The hint control reports three remaining and stays disabled.
+- Browser console checked for errors.
+
+## Follow-up polish
+
+- P3: Revisit hint color and motion when hint behavior is designed. The current muted treatment is intentionally static.
+
+## Automated checks
+
+- `npm test`: 12 files passed, 75 tests passed.
+- `npm run build`: TypeScript and Vite production build passed.
+- `git diff --check`: passed.
+
+final result: passed

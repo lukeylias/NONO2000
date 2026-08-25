@@ -20,8 +20,8 @@ For example, a clue of `3 1` means three consecutive filled squares, at least on
 
 ## Controls
 
-- Left-click or drag to fill squares.
-- Right-click to place crosses.
+- Choose Fill or Cross below the board, then left-click or drag.
+- Right-click to place crosses without changing the switch.
 - A wrong move remains marked and stops the current drag.
 - Marked squares stay locked for that attempt.
 - A wrong Cross on a required square still fills it but keeps a red X.

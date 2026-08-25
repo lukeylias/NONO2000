@@ -8,6 +8,7 @@ import {
   type PointerEvent,
   type ReactNode,
 } from 'react'
+import { Lightbulb, Square, X } from '@phosphor-icons/react'
 import { getColumnMarks, isLineSatisfied } from '../game/play'
 import type { ScoreEventKind } from '../game/score'
 import type { SoundCue } from '../game/sound'
@@ -144,7 +145,7 @@ export function PuzzleBoard({
     ) return
     event.preventDefault()
     onInteraction?.()
-    const primaryMark = event.pointerType === 'mouse' ? 'filled' : mode
+    const primaryMark = mode
     const key = `${row}:${column}`
     const errorMark = errorMarks.get(key)
     if (marks[row][column] !== 'unknown') {
@@ -316,22 +317,31 @@ export function PuzzleBoard({
       </div>
 
       {onModeChange ? (
-        <div className="paint-mode-selector" aria-label="Primary mark" role="group">
+        <div className="board-tools" aria-label="Board tools" role="group">
           <button
-            aria-pressed={mode === 'filled'}
-            className="paint-mode-fill"
-            onClick={() => onModeChange('filled')}
+            aria-checked={mode === 'filled'}
+            aria-label={`Primary mark: ${mode === 'filled' ? 'Fill' : 'Cross'}`}
+            className={`mark-mode-toggle is-${mode}`}
+            onClick={() => onModeChange(mode === 'filled' ? 'crossed' : 'filled')}
+            role="switch"
             type="button"
           >
-            Fill
+            <span className={`mark-mode-option ${mode === 'crossed' ? 'is-active' : ''}`}>
+              <X aria-hidden="true" weight="bold" />
+            </span>
+            <span className={`mark-mode-option ${mode === 'filled' ? 'is-active' : ''}`}>
+              <Square aria-hidden="true" weight="fill" />
+            </span>
           </button>
           <button
-            aria-pressed={mode === 'crossed'}
-            className="paint-mode-cross"
-            onClick={() => onModeChange('crossed')}
+            aria-label="Hints unavailable, 3 remaining"
+            className="hint-status"
+            disabled
+            title="Hints are coming soon"
             type="button"
           >
-            Cross
+            <Lightbulb aria-hidden="true" weight="duotone" />
+            <span aria-hidden="true" className="hint-count">3</span>
           </button>
         </div>
       ) : null}

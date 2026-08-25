@@ -36,8 +36,8 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
         </div>
 
         <ul>
-          <li>On touch screens, choose Fill or Cross below the board, then tap or drag.</li>
-          <li>With a mouse, left-click always fills and right-click always adds a Cross.</li>
+          <li>Choose Fill or Cross below the board, then click, tap, or drag.</li>
+          <li>With a mouse, right-click is a quick Cross shortcut without changing the switch.</li>
           <li>A wrong mark stops the current drag. Release and start a new drag to continue.</li>
           <li>Once marked, a block is locked for that attempt.</li>
           <li>A wrong Fill can be corrected with a Cross. A wrong Cross still fills a required block, but keeps its red X.</li>
