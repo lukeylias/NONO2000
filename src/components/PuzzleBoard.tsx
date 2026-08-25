@@ -83,6 +83,18 @@ export function PuzzleBoard({
     ),
     [marks, puzzle.columnClues],
   )
+  const rowResolved = useMemo(
+    () => rowSatisfied.map((satisfied, row) =>
+      satisfied && marks[row].every((mark) => mark !== 'unknown'),
+    ),
+    [marks, rowSatisfied],
+  )
+  const columnResolved = useMemo(
+    () => columnSatisfied.map((satisfied, column) =>
+      satisfied && getColumnMarks(marks, column).every((mark) => mark !== 'unknown'),
+    ),
+    [columnSatisfied, marks],
+  )
 
   useEffect(() => {
     const finishDrag = () => {
@@ -397,7 +409,9 @@ export function PuzzleBoard({
                   } as CSSProperties}
                 />
               ) : null}
-              {rowSatisfied[rowIndex] ? (
+              {rowResolved[rowIndex] && !(
+                hintReveal?.axis === 'row' && hintReveal.index === rowIndex
+              ) ? (
                 <span
                   aria-hidden="true"
                   className="line-clear-flash is-row"
@@ -406,7 +420,9 @@ export function PuzzleBoard({
                   } as CSSProperties}
                 />
               ) : null}
-              {columnSatisfied[columnIndex] ? (
+              {columnResolved[columnIndex] && !(
+                hintReveal?.axis === 'column' && hintReveal.index === columnIndex
+              ) ? (
                 <span
                   aria-hidden="true"
                   className="line-clear-flash is-column"

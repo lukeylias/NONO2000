@@ -6,6 +6,7 @@ import {
   createMarkGrid,
   type BinaryGrid,
   type CellMark,
+  type MarkGrid,
   type PaintMode,
   type Puzzle,
 } from '../game/types'
@@ -55,6 +56,38 @@ function TouchModeHarness() {
       puzzle={puzzle}
     />
   )
+}
+
+const adjacentSolution = [
+  [0, 0, 0, 0, 0],
+  [1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1],
+] as BinaryGrid
+const adjacentClues = getGridClues(adjacentSolution)
+const adjacentPuzzle: Puzzle = {
+  size: 5,
+  seed: 2,
+  solution: adjacentSolution,
+  rowClues: adjacentClues.rowClues,
+  columnClues: adjacentClues.columnClues,
+  symmetry: 'none',
+}
+const adjacentMarks: MarkGrid = [
+  ['crossed', 'crossed', 'crossed', 'crossed', 'unknown'],
+  ['unknown', 'unknown', 'unknown', 'unknown', 'filled'],
+  ['unknown', 'unknown', 'unknown', 'unknown', 'filled'],
+  ['unknown', 'unknown', 'unknown', 'unknown', 'filled'],
+  ['unknown', 'unknown', 'unknown', 'unknown', 'unknown'],
+]
+
+function AdjacentAutoCompletionHarness() {
+  const [marks, setMarks] = useState(adjacentMarks)
+  const paint = (row: number, column: number, mark: CellMark) => {
+    setMarks((current) => applyPlayerMark(current, adjacentPuzzle.solution, row, column, mark))
+  }
+  return <PuzzleBoard marks={marks} mode="filled" onPaint={paint} puzzle={adjacentPuzzle} />
 }
 
 describe('PuzzleBoard', () => {
@@ -108,7 +141,10 @@ describe('PuzzleBoard', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Use hint on row 1' }))
 
-    expect(screen.getByRole('gridcell', { name: 'Row 1, column 1, filled' })).toBeInTheDocument()
+    const hintedCell = screen.getByRole('gridcell', { name: 'Row 1, column 1, filled' })
+    expect(hintedCell).toBeInTheDocument()
+    expect(hintedCell.querySelector('.hint-line-reveal')).toBeInTheDocument()
+    expect(hintedCell.querySelector('.line-clear-flash.is-row')).not.toBeInTheDocument()
     expect(screen.getByRole('gridcell', { name: 'Row 1, column 2, crossed' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Use hint, 2 remaining' })).toBeInTheDocument()
     expect(screen.queryByText('Choose a row or column')).not.toBeInTheDocument()
@@ -250,6 +286,23 @@ describe('PuzzleBoard', () => {
     expect(rowSweep[9].style.getPropertyValue('--line-clear-delay')).toBe('0ms')
     expect(columnSweep[0].style.getPropertyValue('--line-clear-delay')).toBe('216ms')
     expect(columnSweep[9].style.getPropertyValue('--line-clear-delay')).toBe('0ms')
+  })
+
+  it('animates a row resolved by an adjacent column auto-cross', () => {
+    render(<AdjacentAutoCompletionHarness />)
+
+    const rowCellBefore = screen.getByRole('gridcell', { name: 'Row 1, column 1, crossed' })
+    expect(rowCellBefore.querySelector('.line-clear-flash.is-row')).not.toBeInTheDocument()
+
+    fireEvent.pointerDown(
+      screen.getByRole('gridcell', { name: 'Row 5, column 5, unknown' }),
+      { button: 0, isPrimary: true, pointerType: 'mouse' },
+    )
+    fireEvent.pointerUp(window)
+
+    const rowCellAfter = screen.getByRole('gridcell', { name: 'Row 1, column 1, crossed' })
+    expect(rowCellAfter.querySelector('.line-clear-flash.is-row')).toBeInTheDocument()
+    expect(screen.getByRole('gridcell', { name: 'Row 1, column 5, crossed' })).toBeInTheDocument()
   })
 
   it('does not replace an existing fill or cross with the opposite mark', () => {
