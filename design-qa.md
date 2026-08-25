@@ -55,3 +55,58 @@ The implementation matches the selected concept's material hierarchy: blue glass
 ## Final result
 
 final result: passed
+
+---
+
+# NONO2000 aqua-gel logo design QA
+
+## Comparison target
+
+- Source visual truth: `/Users/luke.ylias/.codex/generated_images/01a0359c-6273-78a3-8983-04be8fcb6a95/exec-ae1670ed-058c-406a-9502-07c440ca29c3.png`
+- Production asset: `/Users/luke.ylias/dev/NONO2000/public/assets/nono2000-logo-aqua-gel.png`
+- Title-screen implementation screenshot: `/var/folders/pp/b_4hc1_s21nbqbj3tb4xwfzm0000gp/T/nono2000-logo-implementation-boot.png`
+- Game-header implementation screenshot: `/var/folders/pp/b_4hc1_s21nbqbj3tb4xwfzm0000gp/T/nono2000-logo-implementation-game.png`
+- Focused source and browser comparison: `/private/tmp/nono2000-logo-source-vs-browser.png`
+- Browser viewport: 1280 x 720 CSS pixels at device pixel ratio 2.
+- Source pixels: 1920 x 819. The transparent production crop is 1848 x 351.
+- Implementation screenshot pixels: 1280 x 720. The browser capture transport normalized the DPR 2 page to viewport pixel dimensions.
+- Rendered sizes: 420 x 79.77 CSS pixels on the title screen and 179.20 x 34.03 CSS pixels in the game header.
+- States: title screen and active 5 x 5 beginner puzzle.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain.
+- Fonts and typography: the selected logo's lettering remains inside the supplied raster artwork. The app does not substitute a font or recreate any part of the name mark.
+- Spacing and layout rhythm: the existing logo containers are unchanged. The new transparent crop fills both containers without clipping or changing nearby spacing.
+- Colors and visual tokens: the original aqua, white, teal, and dark-blue pixels are unchanged. No CSS filter, blend mode, tint, or opacity adjustment is applied.
+- Image quality and asset fidelity: the selected generated mark is used directly. Post-processing only removed the generated checkerboard canvas, restored transparency, and trimmed empty margins. Browser rendering retains the gloss, keyline, outline, proportions, and exact `NONO2000` spelling.
+- Copy and content: the visible mark and accessible fallback both read `NONO2000`.
+
+## Full-view comparison evidence
+
+The title screen keeps the existing layout and renders the selected mark at the established 420-pixel width. The active game uses the same asset at the established compact header width. Neither state clips or stretches the logo.
+
+## Focused comparison evidence
+
+The combined comparison shows the production asset and browser-rendered mark together. Letter shapes, aqua split, white highlight, dark outline, and internal glow remain consistent. The compact browser screenshot has lower capture resolution than the source asset, while the page itself loads the full 1848 x 351 production file.
+
+## Comparison history
+
+1. First browser pass checked the title screen and compact game header.
+   - Result: no P0, P1, or P2 mismatch was found, so no visual fix followed the capture.
+
+## Interaction and runtime checks
+
+- Start puzzle opened the setup screen.
+- Begin puzzle started the game and displayed the compact logo.
+- The browser loaded `/assets/nono2000-logo-aqua-gel.png?v=20260825` at its full natural dimensions.
+- Browser console warnings and errors: none.
+- Automated verification: 13 test files and 84 tests passed.
+
+## Follow-up polish
+
+- None. The user explicitly selected this mark without further visual changes.
+
+## Final result
+
+final result: passed

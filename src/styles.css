@@ -429,11 +429,42 @@ h2 { margin: 0; color: var(--ink); font-size: 28px; font-weight: 850; letter-spa
 .modal-card > p, .modal-card li { color: var(--ink-soft); font-size: 12px; line-height: 1.6; }
 .modal-card ul { margin: 18px 0 24px; padding-left: 20px; }
 .modal-card li + li { margin-top: 5px; }
-.clue-example { display: grid; grid-template-columns: 23px 23px 1fr; align-items: center; margin: 19px 0; padding: 13px; border: 1px solid var(--line-soft); border-radius: 15px; background: var(--paper-soft); color: var(--ink); font-size: 12px; font-weight: 800; }
-.mini-line { display: grid; grid-template-columns: repeat(5, 25px); justify-content: end; }
-.mini-line i { width: 25px; height: 25px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); background: #ffffff; }
-.mini-line i:last-child { border-right: 1px solid var(--line); }
-.mini-line i.filled { background: var(--aqua); }
+.clue-example { margin: 19px 0; padding: 18px; border: 1px solid var(--line-soft); border-radius: 15px; background: #ffffff; color: var(--ink); }
+.clue-example-heading, .clue-example-playfield { display: flex; align-items: center; }
+.clue-example-heading { justify-content: space-between; gap: 16px; }
+.clue-example-heading h3 { margin: 2px 0 0; font-size: 15px; }
+.clue-example-heading .eyebrow { margin: 0; }
+.clue-example-reset { border: 0; background: transparent; color: var(--aqua-deep); cursor: pointer; font: inherit; font-size: 11px; font-weight: 800; }
+.clue-example-reset:disabled { cursor: default; opacity: 0.38; }
+.clue-example-instruction, .clue-example-feedback { margin: 11px 0; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }
+.clue-example.is-solved { border-color: rgba(16, 160, 188, 0.42); box-shadow: 0 0 0 3px rgba(16, 184, 207, 0.08); }
+.clue-example-playfield { position: relative; flex-direction: column; justify-content: center; gap: 16px; padding: 8px 0 4px; }
+.guide-example-board { --grid-line: 4px; display: grid; grid-template-columns: 42px auto; align-items: stretch; justify-items: center; }
+.guide-example-board > .row-clue { grid-column: auto; grid-row: auto; width: 42px; padding: 0 11px 0 0; }
+.guide-example-grid.puzzle-grid { grid-column: auto; grid-row: auto; grid-template-columns: repeat(5, var(--cell-size)); grid-template-rows: var(--cell-size); }
+.guide-example-grid .puzzle-cell { appearance: none; width: var(--cell-size); height: var(--cell-size); padding: 0; }
+.guide-example-grid button.puzzle-cell { cursor: pointer; }
+.guide-example-grid button.puzzle-cell[aria-disabled="true"] { cursor: default; }
+.guide-example-toggle { flex: 0 0 auto; }
+.guide-success-confetti { position: absolute; z-index: 6; top: 30px; left: 50%; width: 1px; height: 1px; pointer-events: none; }
+.guide-success-confetti span { --x: 0px; --y: -60px; --r: 90deg; position: absolute; width: 7px; height: 11px; border-radius: 2px; background: var(--aqua); animation: guide-confetti-pop 760ms cubic-bezier(0.18, 0.8, 0.28, 1) both; }
+.guide-success-confetti span:nth-child(3n) { background: var(--orange); }
+.guide-success-confetti span:nth-child(3n + 2) { background: #f0c73e; }
+.guide-success-confetti span:nth-child(1) { --x: -112px; --y: -44px; --r: -110deg; }
+.guide-success-confetti span:nth-child(2) { --x: -88px; --y: -76px; --r: 150deg; }
+.guide-success-confetti span:nth-child(3) { --x: -58px; --y: -94px; --r: -70deg; }
+.guide-success-confetti span:nth-child(4) { --x: -22px; --y: -82px; --r: 210deg; }
+.guide-success-confetti span:nth-child(5) { --x: 18px; --y: -96px; --r: 80deg; }
+.guide-success-confetti span:nth-child(6) { --x: 58px; --y: -82px; --r: -180deg; }
+.guide-success-confetti span:nth-child(7) { --x: 96px; --y: -54px; --r: 120deg; }
+.guide-success-confetti span:nth-child(8) { --x: 116px; --y: -18px; --r: -90deg; }
+.guide-success-confetti span:nth-child(9) { --x: -104px; --y: 18px; --r: 170deg; }
+.guide-success-confetti span:nth-child(10) { --x: -62px; --y: 42px; --r: -140deg; }
+.guide-success-confetti span:nth-child(11) { --x: 62px; --y: 44px; --r: 200deg; }
+.guide-success-confetti span:nth-child(12) { --x: 106px; --y: 20px; --r: -120deg; }
+.clue-example-feedback { min-height: 17px; margin-bottom: 0; text-align: center; }
+.clue-example-feedback.is-solved { color: var(--aqua-deep); font-weight: 750; }
+.clue-example-feedback.is-error { color: var(--error); font-weight: 750; }
 .modal-action { width: 100%; }
 
 @keyframes app-in { from { opacity: 0; transform: translateY(8px) scale(0.995); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -465,6 +496,7 @@ h2 { margin: 0; color: var(--ink); font-size: 28px; font-weight: 850; letter-spa
   100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0); }
 }
 @keyframes cross-pop { from { opacity: 0.2; transform: scale(0.74); } to { opacity: 1; transform: scale(1); } }
+@keyframes guide-confetti-pop { from { opacity: 1; transform: translate(0, 0) rotate(0) scale(0.3); } to { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(1); } }
 @keyframes mistake-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-2px); } }
 @keyframes line-clear-sweep {
   0% { opacity: 0; transform: scale(0.82); }
@@ -560,8 +592,6 @@ h2 { margin: 0; color: var(--ink); font-size: 28px; font-weight: 850; letter-spa
   .command-backdrop, .modal-backdrop { padding: 10px; }
   .command-menu, .modal-card { max-height: calc(100vh - 20px); padding: 22px 18px; border-radius: 22px; }
   .command-sizes { gap: 5px; }
-  .mini-line { grid-template-columns: repeat(5, 22px); }
-  .mini-line i { width: 22px; height: 22px; }
 }
 
 @media (max-width: 380px) {
@@ -571,4 +601,5 @@ h2 { margin: 0; color: var(--ink); font-size: 28px; font-weight: 850; letter-spa
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  .guide-success-confetti { display: none; }
 }

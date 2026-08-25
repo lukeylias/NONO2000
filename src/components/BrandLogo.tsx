@@ -2,7 +2,7 @@ interface BrandLogoProps {
   variant: 'boot' | 'header'
 }
 
-const logoUrl = `${import.meta.env.BASE_URL}assets/nono2000-logo.png?v=20260825-transparent`
+const logoUrl = `${import.meta.env.BASE_URL}assets/nono2000-logo-aqua-gel.png?v=20260825`
 
 export function BrandLogo({ variant }: BrandLogoProps) {
   return (
