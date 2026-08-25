@@ -68,10 +68,7 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
         role="dialog"
       >
         <div className="modal-heading">
-          <div>
-            <p className="eyebrow">Operator guide</p>
-            <h2 id="how-to-play-heading">How to play</h2>
-          </div>
+          <h2 id="how-to-play-heading">How to play</h2>
           <button aria-label="Close how to play" className="icon-button" onClick={onClose}>Close</button>
         </div>
 

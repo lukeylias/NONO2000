@@ -23,6 +23,7 @@ describe('CommandMenu', () => {
       />,
     )
 
+    expect(screen.queryByText('Audio, help and session')).not.toBeInTheDocument()
     expect(screen.queryByRole('group', { name: 'Grid size' })).not.toBeInTheDocument()
     expect(screen.queryByRole('group', { name: 'Difficulty' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /timer/i })).not.toBeInTheDocument()

@@ -8,6 +8,7 @@ describe('HowToPlay', () => {
   it('starts with a five-block row and the fourth block crossed', () => {
     render(<HowToPlay onClose={vi.fn()} />)
 
+    expect(screen.queryByText('Operator guide')).not.toBeInTheDocument()
     expect(screen.getByRole('grid', { name: 'Practice row' })).toBeInTheDocument()
     expect(screen.getAllByRole('gridcell')).toHaveLength(5)
     expect(screen.getByRole('gridcell', { name: 'Block 4, crossed, preset' })).toBeInTheDocument()

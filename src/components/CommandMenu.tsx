@@ -31,10 +31,7 @@ export function CommandMenu({
         role="dialog"
       >
         <div className="command-heading">
-          <div>
-            <p>Audio, help and session</p>
-            <h2 id="command-heading">System menu</h2>
-          </div>
+          <h2 id="command-heading">System menu</h2>
           <button aria-label="Close system menu" className="terminal-close" onClick={onClose}>
             Close
           </button>
