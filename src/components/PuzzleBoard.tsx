@@ -20,11 +20,20 @@ interface PuzzleBoardProps {
   mode: PaintMode
   onPaint: (row: number, column: number, mark: CellMark) => void
   onFeedback?: (cue: SoundCue) => void
+  onHint?: (axis: HintAxis, index: number) => void
   onInteraction?: () => void
   onModeChange?: (mode: PaintMode) => void
   onScoreEvent?: (row: number, column: number, kind: ScoreEventKind) => void
   revealingSolution?: boolean
   cornerContent?: ReactNode
+  hintsRemaining?: number
+}
+
+type HintAxis = 'row' | 'column'
+
+interface HintTarget {
+  axis: HintAxis
+  index: number
 }
 
 interface DragState {
@@ -48,15 +57,21 @@ export function PuzzleBoard({
   mode,
   onPaint,
   onFeedback,
+  onHint,
   onInteraction,
   onModeChange,
   onScoreEvent,
   revealingSolution = false,
   cornerContent,
+  hintsRemaining = 0,
 }: PuzzleBoardProps) {
   const drag = useRef<DragState | null>(null)
   const [errorMarks, setErrorMarks] = useState<Map<string, CellMark>>(() => new Map())
   const [hoveredCell, setHoveredCell] = useState<{ row: number; column: number } | null>(null)
+  const [hintMode, setHintMode] = useState(false)
+  const [hintHover, setHintHover] = useState<HintTarget | null>(null)
+  const [hintReveal, setHintReveal] = useState<HintTarget | null>(null)
+  const hintRevealTimer = useRef<number | null>(null)
   const size = puzzle.size
   const rowSatisfied = useMemo(
     () => marks.map((row, index) => isLineSatisfied(row, puzzle.rowClues[index])),
@@ -81,6 +96,26 @@ export function PuzzleBoard({
       window.removeEventListener('pointercancel', finishDrag)
       window.removeEventListener('blur', finishDrag)
     }
+  }, [])
+
+  useEffect(() => {
+    const cancelHint = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setHintMode(false)
+      setHintHover(null)
+    }
+    window.addEventListener('keydown', cancelHint)
+    return () => window.removeEventListener('keydown', cancelHint)
+  }, [])
+
+  useEffect(() => {
+    if (hintsRemaining > 0) return
+    setHintMode(false)
+    setHintHover(null)
+  }, [hintsRemaining])
+
+  useEffect(() => () => {
+    if (hintRevealTimer.current !== null) window.clearTimeout(hintRevealTimer.current)
   }, [])
 
   const addError = (key: string, mark: CellMark) => {
@@ -141,7 +176,8 @@ export function PuzzleBoard({
     if (
       event.isPrimary === false ||
       (event.pointerType === 'mouse' && event.button !== 0) ||
-      revealingSolution
+      revealingSolution ||
+      hintMode
     ) return
     event.preventDefault()
     onInteraction?.()
@@ -163,7 +199,7 @@ export function PuzzleBoard({
   }
 
   const continuePointerDrag = (event: PointerEvent<HTMLDivElement>) => {
-    if (!drag.current || event.isPrimary === false) return
+    if (!drag.current || event.isPrimary === false || hintMode) return
     const target = document
       .elementFromPoint(event.clientX, event.clientY)
       ?.closest<HTMLElement>('[data-grid-cell]')
@@ -177,7 +213,7 @@ export function PuzzleBoard({
 
   const crossCell = (event: MouseEvent, row: number, column: number) => {
     event.preventDefault()
-    if (revealingSolution) return
+    if (revealingSolution || hintMode) return
     onInteraction?.()
     const key = `${row}:${column}`
     const errorMark = errorMarks.get(key)
@@ -200,6 +236,39 @@ export function PuzzleBoard({
     onFeedback?.('cross')
   }
 
+  const toggleHintMode = () => {
+    if (!onHint || hintsRemaining <= 0) return
+    onInteraction?.()
+    onFeedback?.('click')
+    setHintMode((current) => !current)
+    setHintHover(null)
+  }
+
+  const selectHintLine = (axis: HintAxis, index: number) => {
+    const satisfied = axis === 'row' ? rowSatisfied[index] : columnSatisfied[index]
+    if (!hintMode || !onHint || hintsRemaining <= 0 || satisfied) return
+
+    setErrorMarks((current) => {
+      const next = new Map(current)
+      for (const key of current.keys()) {
+        const [row, column] = key.split(':').map(Number)
+        if ((axis === 'row' && row === index) || (axis === 'column' && column === index)) {
+          next.delete(key)
+        }
+      }
+      return next
+    })
+    setHintMode(false)
+    setHintHover(null)
+    setHintReveal({ axis, index })
+    onInteraction?.()
+    onFeedback?.('hint')
+    onHint(axis, index)
+
+    if (hintRevealTimer.current !== null) window.clearTimeout(hintRevealTimer.current)
+    hintRevealTimer.current = window.setTimeout(() => setHintReveal(null), 850)
+  }
+
   const style = {
     '--base-cell-size': `${cellSize(size)}px`,
     '--grid-size': size,
@@ -213,42 +282,60 @@ export function PuzzleBoard({
 
       <div className="column-clues" aria-label="Column clues">
         {puzzle.columnClues.map((clues, column) => (
-          <div
+          <button
+            aria-label={`Use hint on column ${column + 1}`}
             className={[
               'column-clue',
               columnSatisfied[column] ? 'is-satisfied' : '',
               hoveredCell?.column === column ? 'is-active' : '',
+              hintMode && !columnSatisfied[column] ? 'is-hint-target' : '',
+              hintHover?.axis === 'column' && hintHover.index === column ? 'is-hint-hovered' : '',
             ].filter(Boolean).join(' ')}
+            disabled={!hintMode || columnSatisfied[column]}
             key={`column-${column}`}
+            onClick={() => selectHintLine('column', column)}
+            onFocus={() => hintMode && setHintHover({ axis: 'column', index: column })}
+            onMouseEnter={() => hintMode && setHintHover({ axis: 'column', index: column })}
+            onMouseLeave={() => setHintHover(null)}
             style={{
               '--clue-clear-delay': `${size * LINE_SWEEP_STEP_MS + CLUE_SETTLE_LEAD_MS}ms`,
             } as CSSProperties}
+            type="button"
           >
             {clues.map((clue, index) => <span key={index}>{clue}</span>)}
-          </div>
+          </button>
         ))}
       </div>
 
       <div className="row-clues" aria-label="Row clues">
         {puzzle.rowClues.map((clues, row) => (
-          <div
+          <button
+            aria-label={`Use hint on row ${row + 1}`}
             className={[
               'row-clue',
               rowSatisfied[row] ? 'is-satisfied' : '',
               hoveredCell?.row === row ? 'is-active' : '',
+              hintMode && !rowSatisfied[row] ? 'is-hint-target' : '',
+              hintHover?.axis === 'row' && hintHover.index === row ? 'is-hint-hovered' : '',
             ].filter(Boolean).join(' ')}
+            disabled={!hintMode || rowSatisfied[row]}
             key={`row-${row}`}
+            onClick={() => selectHintLine('row', row)}
+            onFocus={() => hintMode && setHintHover({ axis: 'row', index: row })}
+            onMouseEnter={() => hintMode && setHintHover({ axis: 'row', index: row })}
+            onMouseLeave={() => setHintHover(null)}
             style={{
               '--clue-clear-delay': `${size * LINE_SWEEP_STEP_MS + CLUE_SETTLE_LEAD_MS}ms`,
             } as CSSProperties}
+            type="button"
           >
             {clues.map((clue, index) => <span key={index}>{clue}</span>)}
-          </div>
+          </button>
         ))}
       </div>
 
       <div
-        className={`puzzle-grid ${revealingSolution ? 'is-previewing' : ''}`}
+        className={`puzzle-grid ${revealingSolution ? 'is-previewing' : ''} ${hintMode ? 'is-hinting' : ''}`}
         onMouseLeave={() => setHoveredCell(null)}
         onPointerMove={continuePointerDrag}
         role="grid"
@@ -277,6 +364,8 @@ export function PuzzleBoard({
                 (rowIndex + 1) % 5 === 0 && rowIndex < size - 1 ? 'major-row' : '',
                 columnIndex === size - 1 ? 'is-last-column' : '',
                 rowIndex === size - 1 ? 'is-last-row' : '',
+                hintHover?.axis === 'row' && hintHover.index === rowIndex ? 'is-hint-hovered' : '',
+                hintHover?.axis === 'column' && hintHover.index === columnIndex ? 'is-hint-hovered' : '',
               ].filter(Boolean).join(' ')}
               key={`${rowIndex}:${columnIndex}`}
               data-column={columnIndex}
@@ -292,6 +381,21 @@ export function PuzzleBoard({
             >
               {errorMarks.has(`${rowIndex}:${columnIndex}`) ? (
                 <span aria-hidden="true" className="error-cross" />
+              ) : null}
+              {hintReveal && (
+                (hintReveal.axis === 'row' && hintReveal.index === rowIndex) ||
+                (hintReveal.axis === 'column' && hintReveal.index === columnIndex)
+              ) ? (
+                <span
+                  aria-hidden="true"
+                  className="hint-line-reveal"
+                  key={`${hintReveal.axis}:${hintReveal.index}:${rowIndex}:${columnIndex}`}
+                  style={{
+                    '--hint-reveal-delay': `${
+                      (hintReveal.axis === 'row' ? columnIndex : rowIndex) * 42
+                    }ms`,
+                  } as CSSProperties}
+                />
               ) : null}
               {rowSatisfied[rowIndex] ? (
                 <span
@@ -317,7 +421,13 @@ export function PuzzleBoard({
       </div>
 
       {onModeChange ? (
-        <div className="board-tools" aria-label="Board tools" role="group">
+        <div className={`board-tools ${hintMode ? 'is-hinting' : ''}`} aria-label="Board tools" role="group">
+          {hintMode ? (
+            <p className="hint-prompt" role="status">
+              Choose a row or column
+              <span>Tap the bulb or press Esc to cancel</span>
+            </p>
+          ) : null}
           <button
             aria-checked={mode === 'filled'}
             aria-label={`Primary mark: ${mode === 'filled' ? 'Fill' : 'Cross'}`}
@@ -334,14 +444,18 @@ export function PuzzleBoard({
             </span>
           </button>
           <button
-            aria-label="Hints unavailable, 3 remaining"
-            className="hint-status"
-            disabled
-            title="Hints are coming soon"
+            aria-label={hintsRemaining > 0
+              ? `${hintMode ? 'Cancel hint' : 'Use hint'}, ${hintsRemaining} remaining`
+              : 'No hints remaining'}
+            aria-pressed={hintMode}
+            className={`hint-status ${hintMode ? 'is-active' : ''}`}
+            disabled={!onHint || hintsRemaining <= 0}
+            onClick={toggleHintMode}
+            title={hintsRemaining > 0 ? 'Complete a row or column' : 'No hints remaining'}
             type="button"
           >
             <Lightbulb aria-hidden="true" weight="duotone" />
-            <span aria-hidden="true" className="hint-count">3</span>
+            <span aria-hidden="true" className="hint-count">{hintsRemaining}</span>
           </button>
         </div>
       ) : null}

@@ -9,7 +9,7 @@ import {
   type PaintMode,
   type Puzzle,
 } from '../game/types'
-import { applyPlayerMark } from '../game/play'
+import { applyPlayerMark, solveLine } from '../game/play'
 import { PuzzleBoard } from './PuzzleBoard'
 
 const solution = Array.from({ length: 10 }, (_, row) =>
@@ -36,13 +36,20 @@ function BoardHarness() {
 function TouchModeHarness() {
   const [marks, setMarks] = useState(createMarkGrid(10))
   const [mode, setMode] = useState<PaintMode>('filled')
+  const [hintsRemaining, setHintsRemaining] = useState(3)
   const paint = (row: number, column: number, mark: CellMark) => {
     setMarks((current) => applyPlayerMark(current, puzzle.solution, row, column, mark))
   }
+  const useHint = (axis: 'row' | 'column', index: number) => {
+    setMarks((current) => solveLine(current, puzzle.solution, axis, index))
+    setHintsRemaining((current) => current - 1)
+  }
   return (
     <PuzzleBoard
+      hintsRemaining={hintsRemaining}
       marks={marks}
       mode={mode}
+      onHint={useHint}
       onModeChange={setMode}
       onPaint={paint}
       puzzle={puzzle}
@@ -93,10 +100,32 @@ describe('PuzzleBoard', () => {
     expect(paint).toHaveBeenCalledWith(0, 1, 'crossed')
   })
 
-  it('shows three hints as unavailable without making the control interactive', () => {
+  it('completes a chosen row and spends one hint', () => {
     render(<TouchModeHarness />)
 
-    expect(screen.getByRole('button', { name: 'Hints unavailable, 3 remaining' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Use hint, 3 remaining' }))
+    expect(screen.getByText('Choose a row or column')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use hint on row 1' }))
+
+    expect(screen.getByRole('gridcell', { name: 'Row 1, column 1, filled' })).toBeInTheDocument()
+    expect(screen.getByRole('gridcell', { name: 'Row 1, column 2, crossed' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Use hint, 2 remaining' })).toBeInTheDocument()
+    expect(screen.queryByText('Choose a row or column')).not.toBeInTheDocument()
+  })
+
+  it('supports column hints and cancels targeting with Escape', () => {
+    render(<TouchModeHarness />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use hint, 3 remaining' }))
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByText('Choose a row or column')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Use hint, 3 remaining' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use hint, 3 remaining' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Use hint on column 2' }))
+    expect(screen.getByRole('gridcell', { name: 'Row 1, column 2, crossed' })).toBeInTheDocument()
+    expect(screen.getByRole('gridcell', { name: 'Row 2, column 2, filled' })).toBeInTheDocument()
   })
 
   it('locks a filled cell after it is painted', () => {

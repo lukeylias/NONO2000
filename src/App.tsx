@@ -14,6 +14,7 @@ import {
   getTimerValue,
   hasCountdownExpired,
   isPuzzleComplete,
+  solveLine,
   timerModeLabel,
 } from './game/play'
 import {
@@ -35,6 +36,9 @@ import {
 } from './game/types'
 
 type GameStatus = 'generating' | 'playing' | 'solved' | 'lost'
+type HintAxis = 'row' | 'column'
+
+const HINTS_PER_PUZZLE = 3
 
 interface WorkerResponse {
   type: 'generated'
@@ -64,6 +68,8 @@ export function App() {
   const [isPaused, setIsPaused] = useState(false)
   const [timePenaltyPulse, setTimePenaltyPulse] = useState(0)
   const [mistakes, setMistakes] = useState<Set<string>>(() => new Set())
+  const [hintsRemaining, setHintsRemaining] = useState(HINTS_PER_PUZZLE)
+  const [hintsUsed, setHintsUsed] = useState(0)
   const worker = useRef<Worker | null>(null)
   const requestId = useRef(0)
   const startedAt = useRef(0)
@@ -104,6 +110,8 @@ export function App() {
     pausedElapsed.current = 0
     setTimePenaltyPulse(0)
     setMistakes(new Set())
+    setHintsRemaining(HINTS_PER_PUZZLE)
+    setHintsUsed(0)
     setStatus('generating')
     worker.current?.postMessage({
       type: 'generate',
@@ -157,6 +165,13 @@ export function App() {
   const paint = (row: number, column: number, mark: CellMark) => {
     if (status !== 'playing' || !puzzle) return
     setMarks((current) => applyPlayerMark(current, puzzle.solution, row, column, mark))
+  }
+
+  const useHint = (axis: HintAxis, index: number) => {
+    if (status !== 'playing' || !puzzle || hintsRemaining <= 0) return
+    setMarks((current) => solveLine(current, puzzle.solution, axis, index))
+    setHintsRemaining((current) => Math.max(0, current - 1))
+    setHintsUsed((current) => current + 1)
   }
 
   const recordScore = (row: number, column: number, kind: ScoreEventKind) => {
@@ -482,6 +497,7 @@ export function App() {
             <SolvedPuzzle
               elapsed={elapsed}
               mistakeCells={mistakes}
+              hintsUsed={hintsUsed}
               onNewGame={() => clickThen(openSetup)}
               onNextPuzzle={() => clickThen(() => requestPuzzle(size))}
               onReplay={() => clickThen(reset)}
@@ -501,8 +517,10 @@ export function App() {
                 key={`${puzzle.seed}:${timerKey}`}
                 marks={marks}
                 mode={paintMode}
+                hintsRemaining={hintsRemaining}
                 onFeedback={playSound}
                 onInteraction={resumeOnBoardInteraction}
+                onHint={useHint}
                 onModeChange={(nextMode) => clickThen(() => setPaintMode(nextMode))}
                 onPaint={paint}
                 onScoreEvent={recordScore}

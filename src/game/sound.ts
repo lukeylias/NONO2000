@@ -5,6 +5,7 @@ export type SoundCue =
   | 'clear'
   | 'mistake'
   | 'line'
+  | 'hint'
   | 'ready'
   | 'lose'
   | 'solve'
@@ -110,6 +111,11 @@ class Nono2000Sound {
         this.tone(440, 0.11, 'square', 0.08)
         this.tone(660, 0.12, 'square', 0.07, 0.065)
         this.tone(880, 0.14, 'triangle', 0.1, 0.13)
+        break
+      case 'hint':
+        this.tone(520, 0.1, 'sine', 0.1)
+        this.tone(780, 0.16, 'triangle', 0.1, 0.07)
+        this.tone(1040, 0.2, 'sine', 0.08, 0.15)
         break
       case 'ready':
         this.tone(180, 0.08, 'triangle', 0.1)

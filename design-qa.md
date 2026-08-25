@@ -1,180 +1,57 @@
-# Design QA: responsive primary-mark selector
+# Aqua Glass design QA
 
-## Reference
+## Comparison target
 
-- Selected concept: `/Users/luke.ylias/.codex/generated_images/01a027ea-1fb4-7200-95eb-4dcea87a8c5f/exec-64e3bb64-8ae9-4935-8d30-154fe4ac8a01.png`
-- Concept intent: a compact Fill/Cross segmented control directly below the puzzle grid, with clear selected-state feedback and touch-friendly targets.
-
-## Implementation evidence
-
-- Desktop playing-state capture: `/private/tmp/nono2000-touch-controls-desktop.png`
-- Responsive tablet and phone capture: `/private/tmp/nono2000-touch-controls-responsive.png`
-- Side-by-side visual comparison: `/private/tmp/nono2000-touch-controls-comparison.png`
-- Tablet viewport represented at 834 x 1194 CSS pixels.
-- Phone viewport represented at 390 x 844 CSS pixels.
-- State checked: 10 x 10 puzzle, playing, Fill and Cross selection states.
-
-## Interaction checks
-
-- Fill and Cross are rendered immediately below the grid at desktop, tablet, and phone sizes.
-- Both controls remain visible without horizontal overflow at 834 x 1194 and 390 x 844.
-- Touch/pen input follows the selected primary mark.
-- Mouse mapping is invariant: left-click always performs Fill, even while Cross is selected; right-click always performs Cross.
-- New puzzles reset the touch selector to Fill.
-- The How to play copy explains the separate touch and mouse behaviors.
-- Browser console showed no errors during the responsive interaction pass.
-
-## Automated checks
-
-- `npm test`: 11 files passed, 73 tests passed.
-- `npm run build`: TypeScript and Vite production build passed.
-- Regression coverage includes touch Cross selection and mouse left-click Fill while Cross is selected.
-
-## Comparison findings
-
-- The implementation preserves the concept's below-board relationship and two-part segmented shape.
-- Selected Fill uses the established cyan system color; selected Cross uses the established orange cross color.
-- Target height is 52 px on larger screens and 48 px on smaller screens, keeping the controls compact while remaining touch-friendly.
-- Existing game layout, grid prominence, and visual language remain unchanged outside this new control.
-- No P0, P1, or P2 visual issues remain in the checked states.
-
-## Comparison history
-
-1. Initial desktop implementation confirmed placement and selected-state styling.
-2. Responsive pass corrected cell sizing to avoid negative height calculations in short landscape layouts.
-3. Final tablet and phone pass confirmed visibility, containment, and invariant mouse behavior.
-
-Final result: passed
-
----
-
-# Design QA: subtle XP/Y2K interface chrome
-
-## Reference
-
-- Source visual truth: `/var/folders/pp/b_4hc1_s21nbqbj3tb4xwfzm0000gp/T/codex-clipboard-4d222424-a152-4e03-953c-83f3b603f8fe.png`
-- Source pixels: 800 x 800.
-- Design intent: translate the reference's pale aqua faces, silver borders, inset highlights, and shallow pressed states into NONO2000 without copying its icons, dense gloss, or stronger decorative effects.
-- Protected scope: puzzle cells, puzzle grid, row clues, column clues, and clue typography.
-
-## Implementation evidence
-
-- Desktop title: `/tmp/nono2000-y2k-title.png`
-- Desktop system menu: `/tmp/nono2000-y2k-system-menu.png`
-- Desktop how-to-play dialog: `/tmp/nono2000-y2k-how-to-play.png`
-- Desktop setup: `/tmp/nono2000-y2k-setup.png`
-- Desktop game controls: `/tmp/nono2000-y2k-game-controls.png`
-- Mobile system menu: `/tmp/nono2000-y2k-mobile-system-menu.png`
-- Full-view comparisons: `/tmp/nono2000-y2k-comparison-title-system.png` and `/tmp/nono2000-y2k-comparison-dialogs-game.png`
-- Desktop implementation pixels and CSS viewport: 1015 x 1089 at browser density 1.
-- Mobile implementation pixels and CSS viewport: 390 x 844 at browser density 1.
-- Density normalization: the source was fit inside the comparison canvas without cropping; implementation screenshots were fit proportionally beside it. This is a style-language comparison rather than a literal screen recreation.
-
-## States and interaction checks
-
-- Checked title buttons, setup selectors, system-menu selectors and toggles, how-to-play actions, in-game header controls, timer controls, and Fill/Cross controls.
-- Verified selected 10 x 10 and Standard states exposed `aria-pressed="true"`.
-- Verified Sounds toggled off and back on with the correct pressed state.
-- Verified both dialogs opened and closed from their visible controls.
-- Mobile system menu measured 370 x 539 inside a 390 x 844 viewport, with no horizontal overflow and no internal scrolling required.
-- Browser console showed no errors or warnings.
+- Source visual truth: `/Users/luke.ylias/.codex/generated_images/01a0359c-6273-78a3-8983-04be8fcb6a95/exec-c2bf2c89-fdf3-4a1a-a888-8d1b4f0686bb.png`
+- Implementation screenshot: `/var/folders/pp/b_4hc1_s21nbqbj3tb4xwfzm0000gp/T/nono2000-aqua-glass-qa/game-relaxed-final-v2.png`
+- Full-view comparison: `/var/folders/pp/b_4hc1_s21nbqbj3tb4xwfzm0000gp/T/nono2000-aqua-glass-qa/full-comparison-final.png`
+- Focused comparison: `/var/folders/pp/b_4hc1_s21nbqbj3tb4xwfzm0000gp/T/nono2000-aqua-glass-qa/focused-comparison-final.png`
+- Browser viewport: 1015 x 1089 CSS pixels at device pixel ratio 1.
+- Source pixels: 1211 x 1299.
+- Implementation capture pixels: 833 x 894. The in-app Browser capture transport scaled the 1015 x 1089 CSS viewport while preserving its aspect ratio.
+- Density normalization: the source was fitted to 833 x 894 for the full-view comparison. The panel and board-tool regions were cropped independently and resized to equal pixel dimensions for the focused comparison.
+- State: active 5 x 5 beginner puzzle, relaxed timer, sound and music on, fill selected, three hints remaining.
 
 ## Findings
 
-- No actionable P0, P1, or P2 differences remain.
-- Fonts and typography: Figtree remains unchanged, preserving NONO2000's existing hierarchy and readable small labels. The reference's more decorative display lettering was intentionally not copied into utility controls.
-- Spacing and layout rhythm: existing component spacing and sizing remain intact. Squarer 7 to 10 px radii and two to three pixels of depth introduce the period treatment without increasing density.
-- Colors and visual tokens: controls use pale cyan faces, silver-blue borders, white top highlights, and restrained lower edges. Selected states are clearer cyan; destructive actions retain a quiet red treatment.
-- Image quality and asset fidelity: the existing transparent NONO2000 logo remains unchanged. No reference icons or decorative image assets were needed or substituted.
-- Copy and content: all product copy, labels, instructions, clue numbers, and board content remain unchanged.
-- The reference uses stronger gloss, gradients, large icons, and decorative badges. Omitting those is intentional because the brief asked for a subtle thematic fit rather than a literal skin.
+- No actionable P0, P1, or P2 differences remain in the selected Aqua Glass button treatment.
+- Fonts and typography: the implementation preserves the existing Figtree hierarchy and compact labels. The concept enlarged the controls and labels despite the prompt constraint to preserve layout, so the implementation intentionally keeps the product's current compact type scale.
+- Spacing and layout rhythm: the existing panel, board, and tool geometry remain unchanged. Button padding and radii stay consistent across neutral, primary, active, timer, and board-tool states.
+- Colors and visual tokens: primary actions use a cyan-to-blue glass gradient with a white top highlight and cobalt lower edge. Neutral controls use pearl chrome. Active controls use softly illuminated cyan. Timer and hint states use warm gold.
+- Image quality and asset fidelity: the supplied NONO2000 logo remains the original raster asset. No new raster assets or substitute drawings were introduced.
+- Copy and content: all existing labels and gameplay content remain unchanged.
+- Accessibility: existing focus-visible outlines remain intact. Active states retain text and `aria-pressed` or switch semantics, so gloss is not the only state signal.
 
-## Focused comparison
+## Full-view comparison evidence
 
-- Focused views were required because bevel depth, selected states, modal borders, and small button labels are not legible in the full-view montage.
-- Full-resolution title, system-menu, how-to-play, setup, game-control, and mobile screenshots were inspected after the combined comparisons.
-- The board and clue typography show no visible change between the before and after captures.
+The implementation keeps the board dominant and limits saturated blue to primary and selected controls. The generated concept changed the scale and position of the existing product layout, which was outside the requested button-style scope. Preserving the current layout is an intentional constraint, not unresolved drift.
 
-## Comparison history
+## Focused comparison evidence
 
-1. Initial implementation comparison found no P0, P1, or P2 issues. The aqua chrome was visible across all requested controls without overpowering the board.
-2. Focused desktop inspection confirmed consistent bevels, readable small labels, restrained primary actions, and coherent dialog framing.
-3. Mobile inspection confirmed the same style language at 390 x 844 with no overflow or clipped controls.
-
-## Automated checks
-
-- `npm test`: 11 files passed, 73 tests passed.
-- `npm run build`: TypeScript and Vite production build passed.
-- `git diff --check`: passed.
-
-## Follow-up polish
-
-- P3: a future pass could tune the primary aqua button saturation after extended play, but the current contrast and hierarchy are appropriate for this brief.
-
-Final result: passed
-
----
-
-# Board tools design QA
-
-- Source visual truth: `/var/folders/pp/b_4hc1_s21nbqbj3tb4xwfzm0000gp/T/codex-clipboard-9caa392e-b25b-4f57-8951-ebbfbaefe394.png`
-- Browser-rendered implementation: `/private/tmp/nono2000-board-tools-full.png`
-- Focused implementation capture: `/private/tmp/nono2000-board-tools-tight.png`
-- Side-by-side comparison: `/private/tmp/nono2000-board-tools-comparison.png`
-- Cross and Fill inset comparison: `/private/tmp/nono2000-switch-state-comparison.png`
-- Viewport: 1015 x 1089 CSS px at 1x density
-- Source pixels: 784 x 264
-- Full implementation pixels: 1015 x 1089
-- Focused implementation pixels: 226 x 80
-- State: 5 x 5 game board, Fill selected, three hints visible and disabled
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- The implementation keeps the source composition: a two-position rounded mark switch followed by a separate circular hint control with a count badge.
-- The app uses its existing pale cyan palette instead of the source's dark palette. This is intentional and keeps the new controls consistent with NONO2000.
-- The hint control is deliberately disabled. Its icon and three-use count remain readable without suggesting that hint behavior is ready.
-
-## Required fidelity surfaces
-
-- Fonts and typography: The controls use icons and the numeric hint badge only. The badge uses the existing Figtree UI font at the same weight as other compact game controls.
-- Spacing and layout rhythm: Both switch halves measure 60px wide with a 5px inset before borders. Both icons measure 25 x 25px. The 52 x 52px hint control is circular, and the switch uses a full pill radius.
-- Colors and visual tokens: The translucent cyan switch and pale amber hint treatment use the existing game palette. Borders are quiet and shadows were removed so the controls sit in the board background instead of looking embossed.
-- Image quality and asset fidelity: X, square, and lightbulb marks use Phosphor vector icons. No text glyphs, CSS-drawn icons, or raster placeholders are used.
-- Copy and content: Visual labels remain icon-only to match the reference. Accessible labels expose `Primary mark: Fill`, `Primary mark: Cross`, and `Hints unavailable, 3 remaining`.
-
-## Full-view comparison
-
-The board remains the dominant element. The new controls sit centered beneath it without changing the board, clue layout, system panel, or game-container padding. The final full screenshot shows no clipping or overlap.
-
-## Focused comparison
-
-The side-by-side comparison confirms the same control grouping, rounded silhouette, selected fill state, lightbulb hint icon, and three-use badge. The implementation is intentionally lighter and less contrast-heavy to fit the existing screen.
+The implementation matches the selected concept's material hierarchy: blue glass for New, pearl faces for Reset, Next, and Menu, cyan illumination for Sound and Music, gold for Timer and Hint, and a frosted fill/cross switch with a pearl selected thumb and blue fill mark.
 
 ## Comparison history
 
-1. The first pass used XP-style inset shadows and read as embossed. Removed the shadows and changed both controls to flat translucent surfaces.
-2. The active icon used a 1.05 scale, which made the selected half look uneven. Removed scaling and verified equal option and icon dimensions in the rendered DOM.
-3. A backdrop blur caused a browser compositing artifact during capture. Removed the blur and recaptured the full screen with the system panel, board, and controls intact.
-4. The sliding panel used content-box sizing, so its border reduced the right-side inset in Fill mode. Changed it to border-box sizing, captured both states from the same clip, and confirmed matching 60px panels with equal edge insets.
+1. Initial implementation screenshot: `/var/folders/pp/b_4hc1_s21nbqbj3tb4xwfzm0000gp/T/nono2000-aqua-glass-qa/game-relaxed-final.png`.
+   - P2: the selected half of the fill/cross switch used a solid blue thumb, while the concept used a pearl thumb containing a smaller blue fill mark.
+   - Fix: restored the pearl selected thumb, retained the blue fill icon, and kept equal left and right inset spacing.
+2. Post-fix screenshot: `/var/folders/pp/b_4hc1_s21nbqbj3tb4xwfzm0000gp/T/nono2000-aqua-glass-qa/game-relaxed-final-v2.png`.
+   - Result: the switch material and hierarchy now match the selected concept. No P0, P1, or P2 issues remain.
 
-## Interaction checks
+## Interaction and runtime checks
 
-- Fill and Cross toggle in both directions.
-- The selected mark applies to mouse and touch primary input.
-- The control exposes the selected state through `aria-checked`.
-- The hint control reports three remaining and stays disabled.
-- Browser console checked for errors.
+- Start puzzle opened the setup screen.
+- Begin puzzle started the game.
+- System menu opened and closed.
+- Sound toggled off and on with the correct pressed state.
+- New opened the setup modal and Cancel returned to the current game.
+- Browser console errors: none.
+- Automated verification: 12 test files and 79 tests passed. The production build and `git diff --check` passed.
 
 ## Follow-up polish
 
-- P3: Revisit hint color and motion when hint behavior is designed. The current muted treatment is intentionally static.
+- P3: the implementation's blue primary gradient is slightly more cyan than the generated concept's cobalt lower edge. This keeps the control aligned with the app's established palette and can be deepened later if a stronger logo match is preferred.
 
-## Automated checks
-
-- `npm test`: 12 files passed, 75 tests passed.
-- `npm run build`: TypeScript and Vite production build passed.
-- `git diff --check`: passed.
+## Final result
 
 final result: passed

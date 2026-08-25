@@ -8,6 +8,7 @@ import {
   hasCountdownExpired,
   isLineSatisfied,
   isPuzzleComplete,
+  solveLine,
   timerModeLabel,
   updateMark,
 } from './play'
@@ -70,6 +71,27 @@ describe('play state', () => {
     expect(next).toEqual([
       ['filled', 'crossed'],
       ['crossed', 'unknown'],
+    ])
+  })
+
+  it('solves a selected row or column without mutating the previous board', () => {
+    const solution: BinaryGrid = [[1, 0], [0, 1]]
+    const marks = createMarkGrid(2)
+
+    const rowSolved = solveLine(marks, solution, 'row', 0)
+    const columnSolved = solveLine(rowSolved, solution, 'column', 1)
+
+    expect(marks).toEqual([
+      ['unknown', 'unknown'],
+      ['unknown', 'unknown'],
+    ])
+    expect(rowSolved).toEqual([
+      ['filled', 'crossed'],
+      ['unknown', 'unknown'],
+    ])
+    expect(columnSolved).toEqual([
+      ['filled', 'crossed'],
+      ['unknown', 'filled'],
     ])
   })
 

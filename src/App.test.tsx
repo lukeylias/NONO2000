@@ -145,4 +145,24 @@ describe('App puzzle controls', () => {
     expect(screen.getByRole('button', { name: 'Sounds: Off' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: 'Music: Off' })).toHaveAttribute('aria-pressed', 'false')
   })
+
+  it('keeps spent hints on Reset and restores them for Next', async () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start puzzle' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Begin puzzle' }))
+    await screen.findByRole('grid', { name: '5 by 5 puzzle grid' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use hint, 3 remaining' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Use hint on row 1' }))
+    expect(screen.getByRole('button', { name: 'Use hint, 2 remaining' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    expect(screen.getByRole('button', { name: 'Use hint, 2 remaining' })).toBeInTheDocument()
+    expect(screen.getByRole('gridcell', { name: 'Row 1, column 1, unknown' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await waitFor(() => expect(activeWorker.postMessage).toHaveBeenCalledTimes(2))
+    expect(screen.getByRole('button', { name: 'Use hint, 3 remaining' })).toBeInTheDocument()
+  })
 })

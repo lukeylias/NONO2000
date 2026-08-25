@@ -5,6 +5,7 @@ interface SolvedPuzzleProps {
   puzzle: Puzzle
   elapsed: number
   mistakeCells?: ReadonlySet<string>
+  hintsUsed?: number
   showTime?: boolean
   onNewGame: () => void
   onNextPuzzle: () => void
@@ -17,13 +18,20 @@ export function SolvedPuzzle({
   puzzle,
   elapsed,
   mistakeCells = EMPTY_MISTAKES,
+  hintsUsed = 0,
   showTime = true,
   onNewGame,
   onNextPuzzle,
   onReplay,
 }: SolvedPuzzleProps) {
   const mistakeCount = mistakeCells.size
-  const isPerfect = mistakeCount === 0
+  const isPerfect = mistakeCount === 0 && hintsUsed === 0
+  const isAssisted = hintsUsed > 0
+  const assistedSummary = `${hintsUsed} ${hintsUsed === 1 ? 'hint' : 'hints'} used${
+    mistakeCount > 0
+      ? ` · ${mistakeCount} ${mistakeCount === 1 ? 'mistake' : 'mistakes'}`
+      : ''
+  }`
 
   return (
     <section className="solved-layout" aria-labelledby="solved-heading">
@@ -32,7 +40,9 @@ export function SolvedPuzzle({
         style={{ '--grid-size': puzzle.size } as React.CSSProperties}
         aria-label={isPerfect
           ? 'Revealed picture, clean solve'
-          : `Revealed picture with ${mistakeCount} ${mistakeCount === 1 ? 'mistake' : 'mistakes'}`}
+          : isAssisted
+            ? `Revealed picture, assisted with ${hintsUsed} ${hintsUsed === 1 ? 'hint' : 'hints'}`
+            : `Revealed picture with ${mistakeCount} ${mistakeCount === 1 ? 'mistake' : 'mistakes'}`}
         role="img"
       >
         {puzzle.solution.flatMap((row, rowIndex) =>
@@ -59,13 +69,18 @@ export function SolvedPuzzle({
 
       <div className="result-card">
         <h2 id="solved-heading">Pattern revealed</h2>
-        <div className={`result-status ${isPerfect ? 'is-perfect' : 'has-mistakes'}`}>
-          <span>{isPerfect ? 'Clean solve' : 'Puzzle solved'}</span>
-          <strong>{isPerfect ? '100%' : `${mistakeCount} ${mistakeCount === 1 ? 'mistake' : 'mistakes'}`}</strong>
+        <div className={`result-status ${isPerfect ? 'is-perfect' : isAssisted ? 'is-assisted' : 'has-mistakes'}`}>
+          <span>{isPerfect ? 'Clean solve' : isAssisted ? 'Assisted solve' : 'Puzzle solved'}</span>
+          <strong>{isPerfect
+            ? '100%'
+            : isAssisted
+              ? assistedSummary
+              : `${mistakeCount} ${mistakeCount === 1 ? 'mistake' : 'mistakes'}`}</strong>
         </div>
         <div className="result-key" aria-label="Result key">
           <span><i className="is-correct" />Correct</span>
-          {!isPerfect ? <span><i className="is-mistake" />Mistake</span> : null}
+          {isAssisted ? <span><i className="is-assisted" />Hint</span> : null}
+          {mistakeCount > 0 ? <span><i className="is-mistake" />Mistake</span> : null}
         </div>
         {showTime ? <p className="result-time">{formatElapsed(elapsed)}</p> : null}
         <p className="result-detail">{puzzle.size}×{puzzle.size} grid</p>

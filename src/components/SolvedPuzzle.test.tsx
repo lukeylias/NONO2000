@@ -81,4 +81,22 @@ describe('SolvedPuzzle', () => {
     expect(screen.queryByText('0:42.3')).not.toBeInTheDocument()
   })
 
+  it('labels a result that used hints as assisted', () => {
+    render(
+      <SolvedPuzzle
+        elapsed={42_300}
+        hintsUsed={2}
+        onNewGame={vi.fn()}
+        onNextPuzzle={vi.fn()}
+        onReplay={vi.fn()}
+        puzzle={puzzle}
+      />,
+    )
+
+    expect(screen.getByText('Assisted solve')).toBeInTheDocument()
+    expect(screen.getByText('2 hints used')).toBeInTheDocument()
+    expect(screen.queryByText('Clean solve')).not.toBeInTheDocument()
+    expect(screen.queryByText('Mistake')).not.toBeInTheDocument()
+  })
+
 })

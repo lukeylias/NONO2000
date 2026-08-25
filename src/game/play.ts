@@ -65,6 +65,27 @@ export function applyPlayerMark(
     : next
 }
 
+export function solveLine(
+  marks: MarkGrid,
+  solution: BinaryGrid,
+  axis: 'row' | 'column',
+  index: number,
+): MarkGrid {
+  const next = marks.map((line) => [...line])
+
+  if (axis === 'row') {
+    solution[index].forEach((cell, column) => {
+      next[index][column] = cell === 1 ? 'filled' : 'crossed'
+    })
+    return next
+  }
+
+  solution.forEach((line, row) => {
+    next[row][index] = line[index] === 1 ? 'filled' : 'crossed'
+  })
+  return next
+}
+
 export function marksToBinary(marks: readonly CellMark[]): number[] {
   return marks.map((mark) => (mark === 'filled' ? 1 : 0))
 }
