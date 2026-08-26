@@ -11,6 +11,12 @@ interface AchievementsModalProps {
   onClose: () => void
 }
 
+const ACHIEVEMENT_ICONS = {
+  'first-decode': '/assets/achievement-first-decode-vista.png',
+  'against-the-clock': '/assets/achievement-against-clock-vista.png',
+  'perfect-signal': '/assets/achievement-perfect-streak-vista.png',
+} as const
+
 export function AchievementsModal({ record, onClose }: AchievementsModalProps) {
   const closeButton = useRef<HTMLButtonElement>(null)
 
@@ -54,7 +60,7 @@ export function AchievementsModal({ record, onClose }: AchievementsModalProps) {
             return (
               <article className={unlockedAt ? 'is-unlocked' : 'is-locked'} key={achievement.id}>
                 <span aria-hidden="true" className="achievement-mark">
-                  {unlockedAt ? '✓' : '◇'}
+                  <img alt="" src={ACHIEVEMENT_ICONS[achievement.id]} />
                 </span>
                 <div>
                   <h3>{achievement.name}</h3>
