@@ -174,9 +174,11 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
           <li>A wrong mark stops the current drag. Release and start a new drag to continue.</li>
           <li>Once marked, a block is locked for that attempt.</li>
           <li>A wrong Fill can be corrected with a Cross. A wrong Cross still fills a required block, but keeps its red X.</li>
-          <li>In timed mode, every wrong Fill or Cross removes 15 seconds.</li>
+          <li>Relaxed has no clock and unlimited hints.</li>
+          <li>Timed includes three hints. Every hint or mistake removes 15 seconds.</li>
+          <li>Perfect disables hints. One mistake ends the attempt and resets your current streak.</li>
           <li>Clear a row or column and its remaining blocks are crossed automatically.</li>
-          <li>Choose a 1, 2, or 5 minute countdown. Relaxed mode has no clock.</li>
+          <li>Timed uses a fixed 1, 2, or 5 minute countdown.</li>
         </ul>
 
         <button className="button primary modal-action" onClick={onClose}>Got it</button>

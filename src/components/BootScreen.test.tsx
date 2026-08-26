@@ -5,12 +5,14 @@ import { BootScreen } from './BootScreen'
 describe('BootScreen', () => {
   it('keeps the landing screen focused on starting, help, and audio', () => {
     const start = vi.fn()
+    const achievements = vi.fn()
     const rules = vi.fn()
     const toggleMusic = vi.fn()
     const toggleSound = vi.fn()
     render(
       <BootScreen
         musicOn
+        onAchievements={achievements}
         onRules={rules}
         onStart={start}
         onToggleMusic={toggleMusic}
@@ -27,12 +29,14 @@ describe('BootScreen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Sounds: On' }))
     fireEvent.click(screen.getByRole('button', { name: 'Music: On' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Start puzzle' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Quick puzzle' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Achievements' }))
     fireEvent.click(screen.getByRole('button', { name: 'How to play' }))
 
     expect(toggleSound).toHaveBeenCalledOnce()
     expect(toggleMusic).toHaveBeenCalledOnce()
     expect(start).toHaveBeenCalledOnce()
+    expect(achievements).toHaveBeenCalledOnce()
     expect(rules).toHaveBeenCalledOnce()
   })
 })

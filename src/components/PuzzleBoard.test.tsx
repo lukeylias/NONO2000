@@ -265,6 +265,29 @@ describe('PuzzleBoard', () => {
     expect(paint).toHaveBeenNthCalledWith(2, 0, 1, 'crossed')
   })
 
+  it('reports a correct fill and a completed line as separate score events', () => {
+    const score = vi.fn()
+    render(
+      <PuzzleBoard
+        marks={createMarkGrid(10)}
+        mode="filled"
+        onPaint={vi.fn()}
+        onScoreEvent={score}
+        puzzle={puzzle}
+      />,
+    )
+
+    fireEvent.pointerDown(screen.getByRole('gridcell', { name: 'Row 1, column 1, unknown' }), {
+      button: 0,
+      isPrimary: true,
+      pointerType: 'mouse',
+    })
+    fireEvent.pointerUp(window)
+
+    expect(score).toHaveBeenNthCalledWith(1, 0, 0, 'correct-fill')
+    expect(score).toHaveBeenCalledTimes(1)
+  })
+
   it('auto-crosses the empty squares in a completed line', () => {
     const { container } = render(<BoardHarness />)
 

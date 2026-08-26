@@ -4,6 +4,7 @@ interface BootScreenProps {
   musicOn: boolean
   soundOn: boolean
   onStart: () => void
+  onAchievements: () => void
   onRules: () => void
   onToggleMusic: () => void
   onToggleSound: () => void
@@ -13,6 +14,7 @@ export function BootScreen({
   musicOn,
   soundOn,
   onStart,
+  onAchievements,
   onRules,
   onToggleMusic,
   onToggleSound,
@@ -27,10 +29,11 @@ export function BootScreen({
         <p className="boot-line">Nostalgic 2000s nonogram vibes.</p>
 
         <button className="boot-start" onClick={onStart}>
-          Start puzzle
+          Quick puzzle
         </button>
 
         <nav className="boot-menu" aria-label="Main menu">
+          <button onClick={onAchievements}>Achievements</button>
           <button onClick={onRules}>How to play</button>
           <button
             aria-label={`Sounds: ${soundOn ? 'On' : 'Off'}`}

@@ -1,13 +1,19 @@
 import { formatElapsed } from '../game/play'
-import type { Puzzle } from '../game/types'
+import { achievementDefinition, type AchievementId } from '../game/achievements'
+import { classifyResult, modeLabel, resultOutcomeLabel } from '../game/modes'
+import type { GameMode, Puzzle } from '../game/types'
 
 interface SolvedPuzzleProps {
   puzzle: Puzzle
   elapsed: number
   mistakeCells?: ReadonlySet<string>
   hintsUsed?: number
-  showTime?: boolean
-  onNewGame: () => void
+  mode: GameMode
+  perfectEligible?: boolean
+  unlockedAchievements?: readonly AchievementId[]
+  perfectStreak?: number
+  bestPerfectStreak?: number
+  onNewPuzzle: () => void
   onNextPuzzle: () => void
   onReplay: () => void
 }
@@ -19,14 +25,17 @@ export function SolvedPuzzle({
   elapsed,
   mistakeCells = EMPTY_MISTAKES,
   hintsUsed = 0,
-  showTime = true,
-  onNewGame,
+  mode,
+  perfectEligible = true,
+  unlockedAchievements = [],
+  perfectStreak = 0,
+  bestPerfectStreak = 0,
+  onNewPuzzle,
   onNextPuzzle,
   onReplay,
 }: SolvedPuzzleProps) {
   const mistakeCount = mistakeCells.size
-  const isPerfect = mistakeCount === 0 && hintsUsed === 0
-  const isAssisted = hintsUsed > 0
+  const outcome = classifyResult(mode, hintsUsed, mistakeCount, perfectEligible)
   const hintSummary = hintsUsed === 0
     ? 'No hints'
     : `${hintsUsed} ${hintsUsed === 1 ? 'hint' : 'hints'}`
@@ -39,9 +48,9 @@ export function SolvedPuzzle({
       <div
         className="solved-picture"
         style={{ '--grid-size': puzzle.size } as React.CSSProperties}
-        aria-label={isPerfect
+        aria-label={outcome === 'clean'
           ? 'Revealed picture, clean solve'
-          : isAssisted
+          : outcome === 'assisted'
             ? `Revealed picture, assisted with ${hintsUsed} ${hintsUsed === 1 ? 'hint' : 'hints'}`
             : `Revealed picture with ${mistakeCount} ${mistakeCount === 1 ? 'mistake' : 'mistakes'}`}
         role="img"
@@ -72,17 +81,32 @@ export function SolvedPuzzle({
         <h2 id="solved-heading">Pattern revealed</h2>
         <div className="result-summary">
           <p className="result-outcome">
-            {isPerfect ? 'Clean solve' : isAssisted ? 'Assisted solve' : 'Puzzle solved'}
+            {resultOutcomeLabel(outcome)}
           </p>
           <p className="result-meta">
-            {puzzle.size}×{puzzle.size} grid · {hintSummary} · {mistakeSummary}
+            {modeLabel(mode)} · {puzzle.size}×{puzzle.size} grid · {hintSummary} · {mistakeSummary}
           </p>
-          {showTime ? <p className="result-time">Time {formatElapsed(elapsed)}</p> : null}
+          {mode === 'timed' ? <p className="result-time">Time {formatElapsed(elapsed)}</p> : null}
+          {mode === 'perfect' ? (
+            <p className="result-perfect-streak">
+              Perfect streak <strong>{perfectStreak}</strong> · Best {bestPerfectStreak}
+            </p>
+          ) : null}
+          {unlockedAchievements.length > 0 ? (
+            <div className="result-achievements" aria-live="polite">
+              <span>{unlockedAchievements.length === 1 ? 'Achievement unlocked' : 'Achievements unlocked'}</span>
+              <strong>{unlockedAchievements
+                .map((id) => achievementDefinition(id).name)
+                .join(' · ')}</strong>
+            </div>
+          ) : null}
         </div>
         <div className="result-actions">
-          <button className="button secondary" onClick={onNewGame}>New</button>
-          <button className="button secondary" onClick={onReplay}>Replay</button>
-          <button className="button primary" onClick={onNextPuzzle}>Next</button>
+          <button className="button secondary" onClick={onNewPuzzle}>New Puzzle</button>
+          {mode !== 'perfect' ? (
+            <button className="button secondary" onClick={onReplay}>Replay Puzzle</button>
+          ) : null}
+          <button className="button primary" onClick={onNextPuzzle}>Next Puzzle</button>
         </div>
       </div>
     </section>

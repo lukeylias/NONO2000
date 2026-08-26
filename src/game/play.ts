@@ -1,5 +1,5 @@
 import { cluesEqual, getLineClues } from './clues'
-import { TIMER_MINUTES, type BinaryGrid, type CellMark, type MarkGrid, type Puzzle, type TimerMinutes } from './types'
+import type { BinaryGrid, CellMark, MarkGrid, Puzzle } from './types'
 
 export function updateMark(
   marks: MarkGrid,
@@ -115,22 +115,12 @@ export function formatElapsed(milliseconds: number): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}.${tenths}`
 }
 
-export function timerModeLabel(timerMinutes: TimerMinutes): string {
-  if (timerMinutes === 0) return 'Relaxed'
-  return `${timerMinutes} minute${timerMinutes === 1 ? '' : 's'}`
+export function getCountdownValue(elapsed: number, timeLimitMs: number): number {
+  return Math.max(0, timeLimitMs - elapsed)
 }
 
-export function cycleTimerMinutes(timerMinutes: TimerMinutes): TimerMinutes {
-  const currentIndex = TIMER_MINUTES.indexOf(timerMinutes)
-  return TIMER_MINUTES[(currentIndex + 1) % TIMER_MINUTES.length]
-}
-
-export function getTimerValue(elapsed: number, timerMinutes: TimerMinutes): number {
-  return timerMinutes > 0 ? Math.max(0, timerMinutes * 60_000 - elapsed) : elapsed
-}
-
-export function hasCountdownExpired(elapsed: number, timerMinutes: TimerMinutes): boolean {
-  return timerMinutes > 0 && elapsed >= timerMinutes * 60_000
+export function hasCountdownExpired(elapsed: number, timeLimitMs: number): boolean {
+  return timeLimitMs > 0 && elapsed >= timeLimitMs
 }
 
 export function puzzleLabel(puzzle: Puzzle): string {

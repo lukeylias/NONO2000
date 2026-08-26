@@ -1,40 +1,55 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { timerModeLabel } from '../game/play'
+import { modeLabel } from '../game/modes'
 import {
   BOARD_SIZES,
+  GAME_MODES,
   PUZZLE_DIFFICULTIES,
+  TIMED_PRESETS,
   type BoardSize,
+  type GameMode,
   type PuzzleDifficulty,
-  type TimerMinutes,
+  type TimedPreset,
 } from '../game/types'
 
 interface PuzzleSetupProps {
   size: BoardSize
   difficulty: PuzzleDifficulty
-  timerMinutes: TimerMinutes
+  mode: GameMode
+  timedPreset: TimedPreset
+  currentPerfectStreak?: number
+  bestPerfectStreak?: number
   presentation?: 'page' | 'modal'
   onBack: () => void
-  onCycleTimer: () => void
+  onSelectMode: (mode: GameMode) => void
+  onSelectTimedPreset: (preset: TimedPreset) => void
   onSelectDifficulty: (difficulty: PuzzleDifficulty) => void
   onSelectSize: (size: BoardSize) => void
   onStart: () => void
 }
 
+const MODE_DESCRIPTIONS: Record<GameMode, string> = {
+  relaxed: 'No clock. Use as many hints as you need.',
+  timed: 'Beat the clock with 3 hints. Hints and mistakes cost 15 seconds.',
+  perfect: 'Hard difficulty. No clock or hints. One mistake ends the run and resets your current streak.',
+}
+
 export function PuzzleSetup({
   size,
   difficulty,
-  timerMinutes,
+  mode,
+  timedPreset,
+  currentPerfectStreak = 0,
+  bestPerfectStreak = 0,
   onBack,
-  onCycleTimer,
+  onSelectMode,
+  onSelectTimedPreset,
   onSelectDifficulty,
   onSelectSize,
   onStart,
   presentation = 'page',
 }: PuzzleSetupProps) {
-  const timerLabel = timerModeLabel(timerMinutes)
   const isModal = presentation === 'modal'
-
   useEffect(() => {
     if (!isModal) return
 
@@ -54,11 +69,58 @@ export function PuzzleSetup({
       onMouseDown={isModal ? (event) => event.stopPropagation() : undefined}
       role={isModal ? 'dialog' : undefined}
     >
-      <p className="boot-status">New puzzle</p>
-      <h2 id="setup-title">Set the grid</h2>
+      <h2 id="setup-title">New Puzzle</h2>
       <p className="setup-line">Choose your puzzle, then begin.</p>
 
       <div className="boot-options" aria-label="Puzzle options">
+        <fieldset>
+          <legend>Mode</legend>
+          <div className="boot-option-group">
+            {GAME_MODES.map((gameMode) => (
+              <button
+                aria-pressed={mode === gameMode}
+                className={gameMode === 'perfect' ? 'is-perfect-mode' : undefined}
+                key={gameMode}
+                onClick={() => onSelectMode(gameMode)}
+              >
+                {modeLabel(gameMode)}
+              </button>
+            ))}
+          </div>
+          <p
+            aria-live="polite"
+            className={`mode-description is-${mode}`}
+            key={mode}
+          >
+            {MODE_DESCRIPTIONS[mode]}
+          </p>
+          {mode === 'perfect' ? (
+            <p className="perfect-history">
+              Current streak <strong>{currentPerfectStreak}</strong>
+              <span aria-hidden="true">·</span>
+              Best <strong>{bestPerfectStreak}</strong>
+            </p>
+          ) : null}
+        </fieldset>
+
+        {mode === 'timed' ? (
+          <fieldset className="mode-time-options">
+            <legend>Time limit</legend>
+            <div className="boot-option-group">
+              {TIMED_PRESETS.map((preset) => (
+                <button
+                  aria-label={`${preset} minute${preset === 1 ? '' : 's'}`}
+                  aria-pressed={timedPreset === preset}
+                  key={preset}
+                  onClick={() => onSelectTimedPreset(preset)}
+                >
+                  {preset} min
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        ) : null}
+
         <fieldset>
           <legend>Grid size</legend>
           <div className="boot-option-group">
@@ -74,30 +136,23 @@ export function PuzzleSetup({
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>Difficulty</legend>
-          <div className="boot-option-group">
-            {PUZZLE_DIFFICULTIES.map((level) => (
-              <button
-                aria-pressed={difficulty === level}
-                key={level}
-                onClick={() => onSelectDifficulty(level)}
-              >
-                {level}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+        {mode !== 'perfect' ? (
+          <fieldset>
+            <legend>Difficulty</legend>
+            <div className="boot-option-group">
+              {PUZZLE_DIFFICULTIES.map((level) => (
+                <button
+                  aria-pressed={difficulty === level}
+                  key={level}
+                  onClick={() => onSelectDifficulty(level)}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        ) : null}
 
-        <button
-          aria-label={`Timer: ${timerLabel}`}
-          className={`setup-timer ${timerMinutes > 0 ? 'is-timed' : 'is-relaxed'}`}
-          onClick={onCycleTimer}
-        >
-          <span>Timer</span>
-          <strong>{timerLabel}</strong>
-          <small>Press to cycle</small>
-        </button>
       </div>
 
       <button className="boot-start" onClick={onStart}>

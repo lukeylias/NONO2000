@@ -26,7 +26,8 @@ interface PuzzleBoardProps {
   onScoreEvent?: (row: number, column: number, kind: ScoreEventKind) => void
   revealingSolution?: boolean
   cornerContent?: ReactNode
-  hintsRemaining?: number
+  hintsRemaining?: number | null
+  hintsDisabledReason?: string
 }
 
 type HintAxis = 'row' | 'column'
@@ -64,6 +65,7 @@ export function PuzzleBoard({
   revealingSolution = false,
   cornerContent,
   hintsRemaining = 0,
+  hintsDisabledReason,
 }: PuzzleBoardProps) {
   const drag = useRef<DragState | null>(null)
   const [errorMarks, setErrorMarks] = useState<Map<string, CellMark>>(() => new Map())
@@ -73,6 +75,7 @@ export function PuzzleBoard({
   const [hintReveal, setHintReveal] = useState<HintTarget | null>(null)
   const hintRevealTimer = useRef<number | null>(null)
   const size = puzzle.size
+  const hintsAvailable = hintsRemaining === null || hintsRemaining > 0
   const rowSatisfied = useMemo(
     () => marks.map((row, index) => isLineSatisfied(row, puzzle.rowClues[index])),
     [marks, puzzle.rowClues],
@@ -121,10 +124,10 @@ export function PuzzleBoard({
   }, [])
 
   useEffect(() => {
-    if (hintsRemaining > 0) return
+    if (hintsAvailable) return
     setHintMode(false)
     setHintHover(null)
-  }, [hintsRemaining])
+  }, [hintsAvailable])
 
   useEffect(() => () => {
     if (hintRevealTimer.current !== null) window.clearTimeout(hintRevealTimer.current)
@@ -175,10 +178,11 @@ export function PuzzleBoard({
     if (drag.current.mark === 'filled') {
       onScoreEvent?.(row, column, 'correct-fill')
     }
+    const completesAnyLine = completesLine(row, column, drag.current.mark)
     clearError(key)
     onPaint(row, column, drag.current.mark)
     onFeedback?.(
-      completesLine(row, column, drag.current.mark)
+      completesAnyLine
         ? 'line'
         : drag.current.mark === 'filled' ? 'fill' : 'cross',
     )
@@ -249,7 +253,7 @@ export function PuzzleBoard({
   }
 
   const toggleHintMode = () => {
-    if (!onHint || hintsRemaining <= 0) return
+    if (!onHint || !hintsAvailable) return
     onInteraction?.()
     onFeedback?.('click')
     setHintMode((current) => !current)
@@ -258,7 +262,7 @@ export function PuzzleBoard({
 
   const selectHintLine = (axis: HintAxis, index: number) => {
     const satisfied = axis === 'row' ? rowSatisfied[index] : columnSatisfied[index]
-    if (!hintMode || !onHint || hintsRemaining <= 0 || satisfied) return
+    if (!hintMode || !onHint || !hintsAvailable || satisfied) return
 
     setErrorMarks((current) => {
       const next = new Map(current)
@@ -460,18 +464,22 @@ export function PuzzleBoard({
             </span>
           </button>
           <button
-            aria-label={hintsRemaining > 0
-              ? `${hintMode ? 'Cancel hint' : 'Use hint'}, ${hintsRemaining} remaining`
-              : 'No hints remaining'}
+            aria-label={hintsAvailable
+              ? hintsRemaining === null
+                ? hintMode ? 'Cancel hint' : 'Use unlimited hint'
+                : `${hintMode ? 'Cancel hint' : 'Use hint'}, ${hintsRemaining} remaining`
+              : hintsDisabledReason ?? 'No hints remaining'}
             aria-pressed={hintMode}
             className={`hint-status ${hintMode ? 'is-active' : ''}`}
-            disabled={!onHint || hintsRemaining <= 0}
+            disabled={!onHint || !hintsAvailable}
             onClick={toggleHintMode}
-            title={hintsRemaining > 0 ? 'Complete a row or column' : 'No hints remaining'}
+            title={hintsAvailable ? 'Complete a row or column' : hintsDisabledReason ?? 'No hints remaining'}
             type="button"
           >
             <Lightbulb aria-hidden="true" weight="duotone" />
-            <span aria-hidden="true" className="hint-count">{hintsRemaining}</span>
+            {hintsRemaining !== null ? (
+              <span aria-hidden="true" className="hint-count">{hintsRemaining}</span>
+            ) : null}
           </button>
         </div>
       ) : null}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { AchievementsModal } from './components/AchievementsModal'
 import { BrandLogo } from './components/BrandLogo'
 import { BootScreen } from './components/BootScreen'
 import { CommandMenu } from './components/CommandMenu'
@@ -9,36 +10,49 @@ import { PuzzleSetup } from './components/PuzzleSetup'
 import { SolvedPuzzle } from './components/SolvedPuzzle'
 import {
   applyPlayerMark,
-  cycleTimerMinutes,
   formatElapsed,
-  getTimerValue,
+  getCountdownValue,
   hasCountdownExpired,
   isPuzzleComplete,
   solveLine,
-  timerModeLabel,
 } from './game/play'
 import {
   applyMistakeTimePenalty,
   MISTAKE_TIME_PENALTY_MS,
   type ScoreEventKind,
 } from './game/score'
+import {
+  advancePerfectStreak,
+  achievementsForAttempt,
+  breakPerfectStreak,
+  loadPlayerRecord,
+  savePlayerRecord,
+  unlockAchievements,
+  type AchievementId,
+} from './game/achievements'
+import {
+  initialHintsForMode,
+  modeLabel,
+  resolveTimedLimitMs,
+  type AttemptRecord,
+} from './game/modes'
 import { gameMusic } from './game/music'
 import { nono2000Sound, type SoundCue } from './game/sound'
 import {
   createMarkGrid,
   type BoardSize,
   type CellMark,
+  type GameMode,
   type MarkGrid,
   type PaintMode,
   type Puzzle,
   type PuzzleDifficulty,
-  type TimerMinutes,
+  type TimedPreset,
 } from './game/types'
 
-type GameStatus = 'generating' | 'playing' | 'solved' | 'lost'
+type GameStatus = 'generating' | 'playing' | 'perfect-failed' | 'solved' | 'lost'
+const PERFECT_FAILURE_REVEAL_DELAY_MS = 700
 type HintAxis = 'row' | 'column'
-
-const HINTS_PER_PUZZLE = 3
 
 interface WorkerResponse {
   type: 'generated'
@@ -59,17 +73,25 @@ export function App() {
   const [showRules, setShowRules] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [showSetup, setShowSetup] = useState(false)
+  const [showAchievements, setShowAchievements] = useState(false)
   const [soundOn, setSoundOn] = useState(true)
   const [musicOn, setMusicOn] = useState(true)
-  const [timerMinutes, setTimerMinutes] = useState<TimerMinutes>(1)
+  const [gameMode, setGameMode] = useState<GameMode>('relaxed')
+  const [timedPreset, setTimedPreset] = useState<TimedPreset>(1)
   const [setupSize, setSetupSize] = useState<BoardSize>(5)
   const [setupDifficulty, setSetupDifficulty] = useState<PuzzleDifficulty>('beginner')
-  const [setupTimerMinutes, setSetupTimerMinutes] = useState<TimerMinutes>(1)
+  const [setupMode, setSetupMode] = useState<GameMode>('relaxed')
+  const [setupTimedPreset, setSetupTimedPreset] = useState<TimedPreset>(1)
   const [isPaused, setIsPaused] = useState(false)
   const [timePenaltyPulse, setTimePenaltyPulse] = useState(0)
   const [mistakes, setMistakes] = useState<Set<string>>(() => new Set())
-  const [hintsRemaining, setHintsRemaining] = useState(HINTS_PER_PUZZLE)
+  const [hintsRemaining, setHintsRemaining] = useState<number | null>(null)
   const [hintsUsed, setHintsUsed] = useState(0)
+  const [perfectEligible, setPerfectEligible] = useState(true)
+  const [newlyUnlocked, setNewlyUnlocked] = useState<AchievementId[]>([])
+  const [completedPerfectStreak, setCompletedPerfectStreak] = useState(0)
+  const [endedPerfectStreak, setEndedPerfectStreak] = useState(0)
+  const [playerRecord, setPlayerRecord] = useState(loadPlayerRecord)
   const worker = useRef<Worker | null>(null)
   const requestId = useRef(0)
   const startedAt = useRef(0)
@@ -77,7 +99,17 @@ export function App() {
   const soundEnabled = useRef(true)
   const musicEnabled = useRef(true)
   const setupPausedGame = useRef(false)
-  const countdownOn = timerMinutes > 0
+  const recordedAttempt = useRef<string | null>(null)
+  const perfectFailureTimeout = useRef<number | null>(null)
+  const countdownOn = gameMode === 'timed'
+  const timeLimitMs = gameMode === 'timed' ? resolveTimedLimitMs(timedPreset) : 0
+  const attemptRecord: AttemptRecord = {
+    mode: gameMode,
+    elapsedTimeMs: elapsed,
+    hintsUsed,
+    mistakes: mistakes.size,
+    perfectEligible,
+  }
 
   const playSound = useCallback((cue: SoundCue) => {
     if (soundEnabled.current) nono2000Sound.play(cue)
@@ -95,23 +127,47 @@ export function App() {
     setTimerKey((key) => key + 1)
   }, [])
 
-  const requestPuzzle = useCallback((
-    nextSize: BoardSize,
-    nextDifficulty: PuzzleDifficulty = difficulty,
-  ) => {
-    const nextRequestId = requestId.current + 1
-    requestId.current = nextRequestId
-    setSize(nextSize)
-    setPuzzle(null)
-    setMarks(createMarkGrid(nextSize))
-    setPaintMode('filled')
+  const resetAttemptState = useCallback((mode: GameMode) => {
+    if (perfectFailureTimeout.current !== null) {
+      window.clearTimeout(perfectFailureTimeout.current)
+      perfectFailureTimeout.current = null
+    }
     setElapsed(0)
     setIsPaused(false)
     pausedElapsed.current = 0
     setTimePenaltyPulse(0)
     setMistakes(new Set())
-    setHintsRemaining(HINTS_PER_PUZZLE)
+    setHintsRemaining(initialHintsForMode(mode))
     setHintsUsed(0)
+    setPerfectEligible(true)
+    setNewlyUnlocked([])
+    setCompletedPerfectStreak(0)
+    setEndedPerfectStreak(0)
+    recordedAttempt.current = null
+  }, [])
+
+  useEffect(() => () => {
+    if (perfectFailureTimeout.current !== null) {
+      window.clearTimeout(perfectFailureTimeout.current)
+    }
+  }, [])
+
+  const requestPuzzle = useCallback((
+    nextSize: BoardSize,
+    nextDifficulty: PuzzleDifficulty = difficulty,
+    nextMode: GameMode = gameMode,
+    nextTimedPreset: TimedPreset = timedPreset,
+  ) => {
+    const nextRequestId = requestId.current + 1
+    requestId.current = nextRequestId
+    setSize(nextSize)
+    setDifficulty(nextDifficulty)
+    setGameMode(nextMode)
+    setTimedPreset(nextTimedPreset)
+    setPuzzle(null)
+    setMarks(createMarkGrid(nextSize))
+    setPaintMode('filled')
+    resetAttemptState(nextMode)
     setStatus('generating')
     worker.current?.postMessage({
       type: 'generate',
@@ -119,7 +175,7 @@ export function App() {
       size: nextSize,
       difficulty: nextDifficulty,
     })
-  }, [difficulty])
+  }, [difficulty, gameMode, resetAttemptState, timedPreset])
 
   useEffect(() => {
     const generator = new Worker(new URL('./game/generator.worker.ts', import.meta.url), {
@@ -151,16 +207,39 @@ export function App() {
 
   useEffect(() => {
     if (status !== 'playing' || !puzzle || isPaused) return
+    if (countdownOn && hasCountdownExpired(elapsed, timeLimitMs)) {
+      setStatus('lost')
+      playSound('lose')
+      return
+    }
     if (isPuzzleComplete(marks, puzzle.solution)) {
       setStatus('solved')
       playSound('solve')
-      return
     }
-    if (hasCountdownExpired(elapsed, timerMinutes)) {
-      setStatus('lost')
-      playSound('lose')
+  }, [countdownOn, elapsed, isPaused, marks, playSound, puzzle, status, timeLimitMs])
+
+  useEffect(() => {
+    if (status !== 'solved' || !puzzle) return
+    const attemptKey = `${puzzle.seed}:${timerKey}`
+    if (recordedAttempt.current === attemptKey) return
+    recordedAttempt.current = attemptKey
+
+    const progressedRecord = gameMode === 'perfect'
+      ? advancePerfectStreak(playerRecord)
+      : playerRecord
+    if (gameMode === 'perfect') setCompletedPerfectStreak(progressedRecord.perfectStreak)
+
+    const eligibleAchievements = achievementsForAttempt({
+      mode: attemptRecord.mode,
+      perfectEligible: attemptRecord.perfectEligible,
+    })
+    const result = unlockAchievements(progressedRecord, eligibleAchievements, new Date().toISOString())
+    setNewlyUnlocked(result.unlocked)
+    if (result.record !== playerRecord) {
+      setPlayerRecord(result.record)
+      savePlayerRecord(result.record)
     }
-  }, [elapsed, isPaused, marks, playSound, puzzle, status, timerMinutes])
+  }, [attemptRecord.mode, attemptRecord.perfectEligible, playerRecord, puzzle, status, timerKey])
 
   const paint = (row: number, column: number, mark: CellMark) => {
     if (status !== 'playing' || !puzzle) return
@@ -168,10 +247,26 @@ export function App() {
   }
 
   const useHint = (axis: HintAxis, index: number) => {
-    if (status !== 'playing' || !puzzle || hintsRemaining <= 0) return
+    if (
+      status !== 'playing'
+      || !puzzle
+      || gameMode === 'perfect'
+      || (hintsRemaining !== null && hintsRemaining <= 0)
+    ) return
     setMarks((current) => solveLine(current, puzzle.solution, axis, index))
-    setHintsRemaining((current) => Math.max(0, current - 1))
+    if (hintsRemaining !== null) {
+      setHintsRemaining((current) => current === null ? null : Math.max(0, current - 1))
+    }
     setHintsUsed((current) => current + 1)
+    if (gameMode === 'timed') applyTimedPenalty()
+  }
+
+  const applyTimedPenalty = () => {
+    if (gameMode !== 'timed') return
+    const elapsedBeforePenalty = performance.now() - startedAt.current
+    startedAt.current -= MISTAKE_TIME_PENALTY_MS
+    setElapsed(applyMistakeTimePenalty(elapsedBeforePenalty))
+    setTimePenaltyPulse((current) => current + 1)
   }
 
   const recordScore = (row: number, column: number, kind: ScoreEventKind) => {
@@ -185,20 +280,30 @@ export function App() {
       return next
     })
 
-    if (countdownOn) {
-      const elapsedBeforePenalty = performance.now() - startedAt.current
-      startedAt.current -= MISTAKE_TIME_PENALTY_MS
-      setElapsed(applyMistakeTimePenalty(elapsedBeforePenalty))
-      setTimePenaltyPulse((current) => current + 1)
+    if (gameMode === 'perfect') {
+      setPerfectEligible(false)
+      setEndedPerfectStreak(playerRecord.perfectStreak)
+      const nextRecord = breakPerfectStreak(playerRecord)
+      if (nextRecord !== playerRecord) {
+        setPlayerRecord(nextRecord)
+        savePlayerRecord(nextRecord)
+      }
+      setStatus('perfect-failed')
+      perfectFailureTimeout.current = window.setTimeout(() => {
+        perfectFailureTimeout.current = null
+        setStatus('lost')
+        playSound('lose')
+      }, PERFECT_FAILURE_REVEAL_DELAY_MS)
+      return
     }
+    if (gameMode === 'timed') applyTimedPenalty()
   }
 
   const reset = () => {
     if (!puzzle) return
     setMarks(createMarkGrid(puzzle.size))
     setStatus('playing')
-    setTimePenaltyPulse(0)
-    setMistakes(new Set())
+    resetAttemptState(gameMode)
     restartTimer()
   }
 
@@ -218,19 +323,6 @@ export function App() {
 
   const startMusicIfEnabled = () => {
     if (musicEnabled.current) gameMusic.setEnabled(true)
-  }
-
-  const cycleTimerMode = () => {
-    setTimerMinutes((current) => cycleTimerMinutes(current))
-
-    if (booted && puzzle) {
-      reset()
-      return
-    }
-
-    setIsPaused(false)
-    pausedElapsed.current = 0
-    setTimePenaltyPulse(0)
   }
 
   const pauseTimer = () => {
@@ -266,10 +358,16 @@ export function App() {
     action()
   }
 
+  const openAchievements = () => {
+    setShowMenu(false)
+    setShowAchievements(true)
+  }
+
   const openSetup = () => {
-    setSetupSize(size)
-    setSetupDifficulty(difficulty)
-    setSetupTimerMinutes(timerMinutes)
+    setSetupSize(5)
+    setSetupDifficulty('beginner')
+    setSetupMode('relaxed')
+    setSetupTimedPreset(1)
     setShowMenu(false)
     setShowSetup(true)
 
@@ -285,13 +383,15 @@ export function App() {
   }
 
   const beginSetupPuzzle = () => {
+    const nextDifficulty = setupMode === 'perfect' ? 'hard' : setupDifficulty
     setShowSetup(false)
     setBooted(true)
     setSize(setupSize)
-    setDifficulty(setupDifficulty)
-    setTimerMinutes(setupTimerMinutes)
+    setDifficulty(nextDifficulty)
+    setGameMode(setupMode)
+    setTimedPreset(setupTimedPreset)
     setupPausedGame.current = false
-    requestPuzzle(setupSize, setupDifficulty)
+    requestPuzzle(setupSize, nextDifficulty, setupMode, setupTimedPreset)
   }
 
   const chooseSetupSize = (nextSize: BoardSize) => {
@@ -302,8 +402,15 @@ export function App() {
     clickThen(() => setSetupDifficulty(nextDifficulty))
   }
 
-  const cycleSetupTimer = () => {
-    clickThen(() => setSetupTimerMinutes((current) => cycleTimerMinutes(current)))
+  const chooseSetupMode = (nextMode: GameMode) => {
+    clickThen(() => {
+      setSetupMode(nextMode)
+      if (nextMode === 'perfect') setSetupDifficulty('hard')
+    })
+  }
+
+  const chooseSetupTimedPreset = (nextPreset: TimedPreset) => {
+    clickThen(() => setSetupTimedPreset(nextPreset))
   }
 
   const disconnect = () => {
@@ -317,12 +424,13 @@ export function App() {
       setStatus('generating')
       setShowMenu(false)
       setShowSetup(false)
+      setShowAchievements(false)
       setupPausedGame.current = false
     })
   }
 
-  const timerValue = getTimerValue(elapsed, timerMinutes)
-  const timerLabel = isPaused ? 'Paused' : countdownOn ? 'Time left' : 'Time'
+  const timerValue = getCountdownValue(elapsed, timeLimitMs)
+  const timerLabel = isPaused ? 'Paused' : 'Time left'
   const timerUrgent = countdownOn && !isPaused && status === 'playing' && timerValue <= 30_000
 
   const systemPanel = (
@@ -333,30 +441,30 @@ export function App() {
             <BrandLogo variant="header" />
           </strong>
         </div>
-        <button className="menu-trigger" onClick={() => clickThen(() => setShowMenu(true))}>
-          Menu
-        </button>
       </header>
 
       <div className="game-topline">
-        <p>{difficulty} · {size}×{size} grid</p>
+        <p>{difficulty} · {size}×{size} grid · {modeLabel(gameMode)}</p>
         <div className="panel-game-actions" aria-label="Puzzle actions">
-          <button className="is-primary" onClick={() => clickThen(openSetup)}>
-            New
+          <button onClick={() => clickThen(openSetup)}>
+            New Puzzle
           </button>
-          <button onClick={() => clickThen(reset)}>Reset</button>
-          <button onClick={() => clickThen(() => requestPuzzle(size))}>
-            Next
+          <button onClick={() => clickThen(reset)}>Replay Puzzle</button>
+          <button
+            className="is-primary"
+            onClick={() => clickThen(() => requestPuzzle(size, difficulty, gameMode, timedPreset))}
+          >
+            Next Puzzle
           </button>
         </div>
         <div className="panel-quick-settings" aria-label="Quick settings">
           <button
-            aria-label={`Timer mode, ${timerModeLabel(timerMinutes)}`}
-            className={`timer-mode-toggle ${countdownOn ? 'is-timed' : 'is-relaxed'}`}
-            onClick={() => clickThen(cycleTimerMode)}
+            aria-label="Open system menu"
+            className="panel-menu-trigger"
+            onClick={() => clickThen(() => setShowMenu(true))}
           >
-            <span>Timer</span>
-            <strong>{countdownOn ? `${timerMinutes} min` : 'Relaxed'}</strong>
+            <span>System</span>
+            <strong>Menu</strong>
           </button>
           <button
             aria-label={`Sounds: ${soundOn ? 'On' : 'Off'}`}
@@ -405,6 +513,16 @@ export function App() {
                 <span className="time-penalty" key={timePenaltyPulse}>-15 sec</span>
               ) : null}
             </div>
+          ) : gameMode === 'perfect' ? (
+            <div
+              aria-label={`Perfect streak ${playerRecord.perfectStreak}, best ${playerRecord.bestPerfectStreak}`}
+              className="perfect-streak-metric"
+              role="status"
+            >
+              <span>Perfect streak</span>
+              <strong>{playerRecord.perfectStreak}</strong>
+              <small>Best {playerRecord.bestPerfectStreak}</small>
+            </div>
           ) : null}
         </div>
       </div>
@@ -416,6 +534,7 @@ export function App() {
       {showMenu ? (
         <CommandMenu
           inSession={booted}
+          onAchievements={() => clickThen(openAchievements)}
           onClose={() => clickThen(() => setShowMenu(false))}
           onDisconnect={disconnect}
           onRules={() => clickThen(() => {
@@ -430,18 +549,28 @@ export function App() {
       ) : null}
       {booted && showSetup ? (
         <PuzzleSetup
+          bestPerfectStreak={playerRecord.bestPerfectStreak}
+          currentPerfectStreak={playerRecord.perfectStreak}
           difficulty={setupDifficulty}
+          mode={setupMode}
           onBack={() => clickThen(closeSetup)}
-          onCycleTimer={cycleSetupTimer}
           onSelectDifficulty={chooseSetupDifficulty}
+          onSelectMode={chooseSetupMode}
           onSelectSize={chooseSetupSize}
+          onSelectTimedPreset={chooseSetupTimedPreset}
           onStart={() => clickThen(beginSetupPuzzle)}
           presentation="modal"
           size={setupSize}
-          timerMinutes={setupTimerMinutes}
+          timedPreset={setupTimedPreset}
         />
       ) : null}
       {showRules ? <HowToPlay onClose={() => clickThen(() => setShowRules(false))} /> : null}
+      {showAchievements ? (
+        <AchievementsModal
+          onClose={() => clickThen(() => setShowAchievements(false))}
+          record={playerRecord}
+        />
+      ) : null}
     </>
   )
 
@@ -454,17 +583,22 @@ export function App() {
       >
         {showSetup ? (
           <PuzzleSetup
+            bestPerfectStreak={playerRecord.bestPerfectStreak}
+            currentPerfectStreak={playerRecord.perfectStreak}
             difficulty={setupDifficulty}
+            mode={setupMode}
             onBack={() => clickThen(closeSetup)}
-            onCycleTimer={cycleSetupTimer}
             onSelectDifficulty={chooseSetupDifficulty}
+            onSelectMode={chooseSetupMode}
             onSelectSize={chooseSetupSize}
+            onSelectTimedPreset={chooseSetupTimedPreset}
             onStart={() => clickThen(beginSetupPuzzle)}
             size={setupSize}
-            timerMinutes={setupTimerMinutes}
+            timedPreset={setupTimedPreset}
           />
         ) : (
           <BootScreen
+            onAchievements={() => clickThen(openAchievements)}
             onRules={() => clickThen(() => setShowRules(true))}
             onStart={() => clickThen(openSetup)}
             onToggleMusic={() => clickThen(toggleMusic)}
@@ -495,20 +629,27 @@ export function App() {
             </div>
           ) : status === 'solved' ? (
             <SolvedPuzzle
-              elapsed={elapsed}
+              bestPerfectStreak={playerRecord.bestPerfectStreak}
+              elapsed={attemptRecord.elapsedTimeMs}
               mistakeCells={mistakes}
-              hintsUsed={hintsUsed}
-              onNewGame={() => clickThen(openSetup)}
-              onNextPuzzle={() => clickThen(() => requestPuzzle(size))}
+              hintsUsed={attemptRecord.hintsUsed}
+              mode={attemptRecord.mode}
+              onNewPuzzle={() => clickThen(openSetup)}
+              onNextPuzzle={() => clickThen(() => requestPuzzle(size, difficulty, gameMode, timedPreset))}
               onReplay={() => clickThen(reset)}
+              perfectEligible={attemptRecord.perfectEligible}
+              perfectStreak={completedPerfectStreak}
               puzzle={puzzle}
-              showTime={countdownOn}
+              unlockedAchievements={newlyUnlocked}
             />
           ) : status === 'lost' ? (
             <LostPuzzle
-              onNewGame={() => clickThen(openSetup)}
-              onNextPuzzle={() => clickThen(() => requestPuzzle(size))}
+              bestPerfectStreak={playerRecord.bestPerfectStreak}
+              endedPerfectStreak={endedPerfectStreak}
+              onNewPuzzle={() => clickThen(openSetup)}
+              onNextPuzzle={() => clickThen(() => requestPuzzle(size, difficulty, gameMode, timedPreset))}
               onRetry={() => clickThen(reset)}
+              reason={gameMode === 'perfect' ? 'perfect' : 'timeout'}
             />
           ) : (
             <>
@@ -518,9 +659,12 @@ export function App() {
                 marks={marks}
                 mode={paintMode}
                 hintsRemaining={hintsRemaining}
+                hintsDisabledReason={gameMode === 'perfect'
+                  ? 'Hints unavailable in Perfect mode'
+                  : undefined}
                 onFeedback={playSound}
                 onInteraction={resumeOnBoardInteraction}
-                onHint={useHint}
+                onHint={gameMode === 'perfect' ? undefined : useHint}
                 onModeChange={(nextMode) => clickThen(() => setPaintMode(nextMode))}
                 onPaint={paint}
                 onScoreEvent={recordScore}

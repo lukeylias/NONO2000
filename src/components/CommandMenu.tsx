@@ -5,6 +5,7 @@ interface CommandMenuProps {
   musicOn: boolean
   soundOn: boolean
   onClose: () => void
+  onAchievements: () => void
   onDisconnect: () => void
   onRules: () => void
   onToggleMusic: () => void
@@ -16,6 +17,7 @@ export function CommandMenu({
   musicOn,
   soundOn,
   onClose,
+  onAchievements,
   onDisconnect,
   onRules,
   onToggleMusic,
@@ -52,6 +54,7 @@ export function CommandMenu({
         </div>
 
         <div className="command-actions">
+          <button onClick={onAchievements}>Achievements</button>
           <button onClick={onRules}>How to play</button>
           {inSession ? <button className="is-danger" onClick={onDisconnect}>Back to title</button> : null}
         </div>

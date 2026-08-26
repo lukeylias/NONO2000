@@ -1,8 +1,10 @@
 export const BOARD_SIZES = [5, 10, 15] as const
-export const TIMER_MINUTES = [0, 1, 2, 5] as const
+export const GAME_MODES = ['relaxed', 'timed', 'perfect'] as const
+export const TIMED_PRESETS = [1, 2, 5] as const
 
 export type BoardSize = (typeof BOARD_SIZES)[number]
-export type TimerMinutes = (typeof TIMER_MINUTES)[number]
+export type GameMode = (typeof GAME_MODES)[number]
+export type TimedPreset = (typeof TIMED_PRESETS)[number]
 export type BinaryCell = 0 | 1
 export type BinaryGrid = BinaryCell[][]
 export type CellMark = 'unknown' | 'filled' | 'crossed'

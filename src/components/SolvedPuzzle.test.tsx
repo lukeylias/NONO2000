@@ -25,7 +25,8 @@ describe('SolvedPuzzle', () => {
     render(
       <SolvedPuzzle
         elapsed={42_300}
-        onNewGame={newGame}
+        mode="timed"
+        onNewPuzzle={newGame}
         onNextPuzzle={nextPuzzle}
         onReplay={replay}
         puzzle={puzzle}
@@ -34,15 +35,15 @@ describe('SolvedPuzzle', () => {
 
     expect(screen.getByText('Pattern revealed')).toBeInTheDocument()
     expect(screen.getByText('Clean solve')).toBeInTheDocument()
-    expect(screen.getByText('10×10 grid · No hints · No mistakes')).toBeInTheDocument()
+    expect(screen.getByText('Timed · 10×10 grid · No hints · No mistakes')).toBeInTheDocument()
     expect(screen.getByText('Time 0:42.3')).toBeInTheDocument()
     expect(screen.queryByText(/credits/i)).not.toBeInTheDocument()
     expect(screen.queryByText('Systems')).not.toBeInTheDocument()
     expect(screen.queryByRole('group', { name: 'Next grid size' })).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'New' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Replay' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByRole('button', { name: 'New Puzzle' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Replay Puzzle' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next Puzzle' }))
 
     expect(newGame).toHaveBeenCalledOnce()
     expect(replay).toHaveBeenCalledOnce()
@@ -53,16 +54,17 @@ describe('SolvedPuzzle', () => {
     const { container } = render(
       <SolvedPuzzle
         elapsed={42_300}
+        mode="relaxed"
         mistakeCells={new Set(['0:0', '0:1'])}
-        onNewGame={vi.fn()}
+        onNewPuzzle={vi.fn()}
         onNextPuzzle={vi.fn()}
         onReplay={vi.fn()}
         puzzle={puzzle}
       />,
     )
 
-    expect(screen.getByText('10×10 grid · No hints · 2 mistakes')).toBeInTheDocument()
-    expect(screen.getByText('Puzzle solved')).toBeInTheDocument()
+    expect(screen.getByText('Relaxed · 10×10 grid · No hints · 2 mistakes')).toBeInTheDocument()
+    expect(screen.getByText('Recovered solve')).toBeInTheDocument()
     expect(container.querySelectorAll('.result-mistake-marker')).toHaveLength(2)
     expect(container.querySelectorAll('.solved-picture > .was-mistake')).toHaveLength(2)
   })
@@ -71,11 +73,11 @@ describe('SolvedPuzzle', () => {
     render(
       <SolvedPuzzle
         elapsed={42_300}
-        onNewGame={vi.fn()}
+        mode="relaxed"
+        onNewPuzzle={vi.fn()}
         onNextPuzzle={vi.fn()}
         onReplay={vi.fn()}
         puzzle={puzzle}
-        showTime={false}
       />,
     )
 
@@ -87,7 +89,8 @@ describe('SolvedPuzzle', () => {
       <SolvedPuzzle
         elapsed={42_300}
         hintsUsed={2}
-        onNewGame={vi.fn()}
+        mode="relaxed"
+        onNewPuzzle={vi.fn()}
         onNextPuzzle={vi.fn()}
         onReplay={vi.fn()}
         puzzle={puzzle}
@@ -95,8 +98,30 @@ describe('SolvedPuzzle', () => {
     )
 
     expect(screen.getByText('Assisted solve')).toBeInTheDocument()
-    expect(screen.getByText('10×10 grid · 2 hints · No mistakes')).toBeInTheDocument()
+    expect(screen.getByText('Relaxed · 10×10 grid · 2 hints · No mistakes')).toBeInTheDocument()
     expect(screen.queryByText('Clean solve')).not.toBeInTheDocument()
   })
 
+  it('shows the Perfect streak and achievement announcements', () => {
+    render(
+      <SolvedPuzzle
+        elapsed={42_300}
+        mode="perfect"
+        onNewPuzzle={vi.fn()}
+        onNextPuzzle={vi.fn()}
+        onReplay={vi.fn()}
+        bestPerfectStreak={5}
+        perfectStreak={3}
+        puzzle={puzzle}
+        unlockedAchievements={['first-decode']}
+      />,
+    )
+
+    expect(screen.getByText(/Perfect streak/)).toHaveTextContent('3 · Best 5')
+    expect(screen.getByText('Clean solve')).toBeInTheDocument()
+    expect(screen.getByText('Achievement unlocked')).toBeInTheDocument()
+    expect(screen.getByText('First Decode')).toBeInTheDocument()
+    expect(screen.queryByText(/^Time /)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Replay Puzzle' })).not.toBeInTheDocument()
+  })
 })

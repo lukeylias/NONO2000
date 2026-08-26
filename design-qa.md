@@ -1,3 +1,29 @@
+# Play modes and achievements QA
+
+## Scope
+
+- Added Relaxed, Timed, and Perfect setup choices without changing puzzle generation or the numeric puzzle seed.
+- Added conditional Timed presets, a locked in-game mode readout, mode-specific hint behavior, mode-aware result summaries, and device-local achievements.
+- Reused the existing Aqua Glass and unified Aero surface styles for setup, game controls, results, and the achievements modal.
+
+## Automated and static checks
+
+- Verified every automatic time-table entry and every manual override in unit tests.
+- Verified staged setup, locked active configuration, Reset, Next, Relaxed hints, Timed hints and penalty feedback, Perfect recovery, result summaries, persistence recovery, idempotent unlocks, completion dates, keyboard closing, and initial modal focus.
+- Checked the existing responsive rules for setup overflow, board sizing below 900px and 500px, result-card sizing, and modal width constraints.
+- Automated verification: 16 test files and 108 tests passed. The production build and `git diff --check` passed.
+
+## Browser QA status
+
+- The local preview server was available, but the in-app browser URL policy blocked localhost control before the desktop and narrow visual pass could begin.
+- No alternate browser-control route was used. Desktop and narrow visual inspection remain a manual follow-up.
+
+## Final result
+
+final result: automated checks passed; manual browser QA pending
+
+---
+
 # Aqua Glass design QA
 
 ## Comparison target

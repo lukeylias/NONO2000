@@ -9,11 +9,13 @@ describe('CommandMenu', () => {
     const toggleSound = vi.fn()
     const rules = vi.fn()
     const disconnect = vi.fn()
+    const achievements = vi.fn()
 
     render(
       <CommandMenu
         inSession
         musicOn={false}
+        onAchievements={achievements}
         onClose={close}
         onDisconnect={disconnect}
         onRules={rules}
@@ -33,12 +35,14 @@ describe('CommandMenu', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sounds On' }))
     fireEvent.click(screen.getByRole('button', { name: 'Music Off' }))
     fireEvent.click(screen.getByRole('button', { name: 'How to play' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Achievements' }))
     fireEvent.click(screen.getByRole('button', { name: 'Back to title' }))
     fireEvent.click(screen.getByRole('button', { name: 'Close system menu' }))
 
     expect(toggleSound).toHaveBeenCalledOnce()
     expect(toggleMusic).toHaveBeenCalledOnce()
     expect(rules).toHaveBeenCalledOnce()
+    expect(achievements).toHaveBeenCalledOnce()
     expect(disconnect).toHaveBeenCalledOnce()
     expect(close).toHaveBeenCalledOnce()
   })
@@ -48,6 +52,7 @@ describe('CommandMenu', () => {
       <CommandMenu
         inSession={false}
         musicOn
+        onAchievements={vi.fn()}
         onClose={vi.fn()}
         onDisconnect={vi.fn()}
         onRules={vi.fn()}

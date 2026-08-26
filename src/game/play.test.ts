@@ -2,14 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { createMarkGrid, type BinaryGrid } from './types'
 import {
   applyPlayerMark,
-  cycleTimerMinutes,
   formatElapsed,
-  getTimerValue,
+  getCountdownValue,
   hasCountdownExpired,
   isLineSatisfied,
   isPuzzleComplete,
   solveLine,
-  timerModeLabel,
   updateMark,
 } from './play'
 
@@ -111,32 +109,17 @@ describe('play state', () => {
   })
 
   it('counts down from the selected duration and clamps at zero', () => {
-    expect(formatElapsed(getTimerValue(0, 1))).toBe('1:00.0')
-    expect(formatElapsed(getTimerValue(0, 2))).toBe('2:00.0')
-    expect(formatElapsed(getTimerValue(0, 5))).toBe('5:00.0')
-    expect(getTimerValue(30_000, 2)).toBe(90_000)
-    expect(getTimerValue(125_000, 2)).toBe(0)
-  })
-
-  it('counts up when countdown is disabled', () => {
-    expect(getTimerValue(65_987, 0)).toBe(65_987)
+    expect(formatElapsed(getCountdownValue(0, 60_000))).toBe('1:00.0')
+    expect(formatElapsed(getCountdownValue(0, 120_000))).toBe('2:00.0')
+    expect(formatElapsed(getCountdownValue(0, 300_000))).toBe('5:00.0')
+    expect(getCountdownValue(30_000, 120_000)).toBe(90_000)
+    expect(getCountdownValue(125_000, 120_000)).toBe(0)
   })
 
   it('expires only when an enabled countdown reaches zero', () => {
-    expect(hasCountdownExpired(59_999, 1)).toBe(false)
-    expect(hasCountdownExpired(60_000, 1)).toBe(true)
-    expect(hasCountdownExpired(299_999, 5)).toBe(false)
-    expect(hasCountdownExpired(300_000, 5)).toBe(true)
-    expect(hasCountdownExpired(180_000, 0)).toBe(false)
-  })
-
-  it('cycles through relaxed, one, two, and five minute modes', () => {
-    expect(cycleTimerMinutes(0)).toBe(1)
-    expect(cycleTimerMinutes(1)).toBe(2)
-    expect(cycleTimerMinutes(2)).toBe(5)
-    expect(cycleTimerMinutes(5)).toBe(0)
-    expect(timerModeLabel(0)).toBe('Relaxed')
-    expect(timerModeLabel(1)).toBe('1 minute')
-    expect(timerModeLabel(5)).toBe('5 minutes')
+    expect(hasCountdownExpired(59_999, 60_000)).toBe(false)
+    expect(hasCountdownExpired(60_000, 60_000)).toBe(true)
+    expect(hasCountdownExpired(299_999, 300_000)).toBe(false)
+    expect(hasCountdownExpired(300_000, 300_000)).toBe(true)
   })
 })
