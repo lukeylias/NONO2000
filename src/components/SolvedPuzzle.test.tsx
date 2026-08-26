@@ -33,8 +33,9 @@ describe('SolvedPuzzle', () => {
     )
 
     expect(screen.getByText('Pattern revealed')).toBeInTheDocument()
-    expect(screen.getByText('100%')).toBeInTheDocument()
     expect(screen.getByText('Clean solve')).toBeInTheDocument()
+    expect(screen.getByText('10×10 grid · No hints · No mistakes')).toBeInTheDocument()
+    expect(screen.getByText('Time 0:42.3')).toBeInTheDocument()
     expect(screen.queryByText(/credits/i)).not.toBeInTheDocument()
     expect(screen.queryByText('Systems')).not.toBeInTheDocument()
     expect(screen.queryByRole('group', { name: 'Next grid size' })).not.toBeInTheDocument()
@@ -60,7 +61,7 @@ describe('SolvedPuzzle', () => {
       />,
     )
 
-    expect(screen.getByText('2 mistakes')).toBeInTheDocument()
+    expect(screen.getByText('10×10 grid · No hints · 2 mistakes')).toBeInTheDocument()
     expect(screen.getByText('Puzzle solved')).toBeInTheDocument()
     expect(container.querySelectorAll('.result-mistake-marker')).toHaveLength(2)
     expect(container.querySelectorAll('.solved-picture > .was-mistake')).toHaveLength(2)
@@ -78,7 +79,7 @@ describe('SolvedPuzzle', () => {
       />,
     )
 
-    expect(screen.queryByText('0:42.3')).not.toBeInTheDocument()
+    expect(screen.queryByText('Time 0:42.3')).not.toBeInTheDocument()
   })
 
   it('labels a result that used hints as assisted', () => {
@@ -94,9 +95,8 @@ describe('SolvedPuzzle', () => {
     )
 
     expect(screen.getByText('Assisted solve')).toBeInTheDocument()
-    expect(screen.getByText('2 hints used')).toBeInTheDocument()
+    expect(screen.getByText('10×10 grid · 2 hints · No mistakes')).toBeInTheDocument()
     expect(screen.queryByText('Clean solve')).not.toBeInTheDocument()
-    expect(screen.queryByText('Mistake')).not.toBeInTheDocument()
   })
 
 })

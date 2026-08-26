@@ -27,11 +27,12 @@ export function SolvedPuzzle({
   const mistakeCount = mistakeCells.size
   const isPerfect = mistakeCount === 0 && hintsUsed === 0
   const isAssisted = hintsUsed > 0
-  const assistedSummary = `${hintsUsed} ${hintsUsed === 1 ? 'hint' : 'hints'} used${
-    mistakeCount > 0
-      ? ` · ${mistakeCount} ${mistakeCount === 1 ? 'mistake' : 'mistakes'}`
-      : ''
-  }`
+  const hintSummary = hintsUsed === 0
+    ? 'No hints'
+    : `${hintsUsed} ${hintsUsed === 1 ? 'hint' : 'hints'}`
+  const mistakeSummary = mistakeCount === 0
+    ? 'No mistakes'
+    : `${mistakeCount} ${mistakeCount === 1 ? 'mistake' : 'mistakes'}`
 
   return (
     <section className="solved-layout" aria-labelledby="solved-heading">
@@ -69,21 +70,15 @@ export function SolvedPuzzle({
 
       <div className="result-card">
         <h2 id="solved-heading">Pattern revealed</h2>
-        <div className={`result-status ${isPerfect ? 'is-perfect' : isAssisted ? 'is-assisted' : 'has-mistakes'}`}>
-          <span>{isPerfect ? 'Clean solve' : isAssisted ? 'Assisted solve' : 'Puzzle solved'}</span>
-          <strong>{isPerfect
-            ? '100%'
-            : isAssisted
-              ? assistedSummary
-              : `${mistakeCount} ${mistakeCount === 1 ? 'mistake' : 'mistakes'}`}</strong>
+        <div className="result-summary">
+          <p className="result-outcome">
+            {isPerfect ? 'Clean solve' : isAssisted ? 'Assisted solve' : 'Puzzle solved'}
+          </p>
+          <p className="result-meta">
+            {puzzle.size}×{puzzle.size} grid · {hintSummary} · {mistakeSummary}
+          </p>
+          {showTime ? <p className="result-time">Time {formatElapsed(elapsed)}</p> : null}
         </div>
-        <div className="result-key" aria-label="Result key">
-          <span><i className="is-correct" />Correct</span>
-          {isAssisted ? <span><i className="is-assisted" />Hint</span> : null}
-          {mistakeCount > 0 ? <span><i className="is-mistake" />Mistake</span> : null}
-        </div>
-        {showTime ? <p className="result-time">{formatElapsed(elapsed)}</p> : null}
-        <p className="result-detail">{puzzle.size}×{puzzle.size} grid</p>
         <div className="result-actions">
           <button className="button secondary" onClick={onNewGame}>New</button>
           <button className="button secondary" onClick={onReplay}>Replay</button>
