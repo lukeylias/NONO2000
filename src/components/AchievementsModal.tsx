@@ -5,6 +5,7 @@ import {
   formatAchievementDate,
   type PlayerRecord,
 } from '../game/achievements'
+import { assetUrl } from '../asset-url'
 
 interface AchievementsModalProps {
   record: PlayerRecord
@@ -12,9 +13,9 @@ interface AchievementsModalProps {
 }
 
 const ACHIEVEMENT_ICONS = {
-  'first-decode': '/assets/achievement-first-decode-vista.png',
-  'against-the-clock': '/assets/achievement-against-clock-vista.png',
-  'perfect-signal': '/assets/achievement-perfect-streak-vista.png',
+  'first-decode': assetUrl('assets/achievement-first-decode-vista.png'),
+  'against-the-clock': assetUrl('assets/achievement-against-clock-vista.png'),
+  'perfect-signal': assetUrl('assets/achievement-perfect-streak-vista.png'),
 } as const
 
 export function AchievementsModal({ record, onClose }: AchievementsModalProps) {

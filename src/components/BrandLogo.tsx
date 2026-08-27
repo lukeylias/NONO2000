@@ -1,8 +1,10 @@
+import { assetUrl } from '../asset-url'
+
 interface BrandLogoProps {
   variant: 'boot' | 'header'
 }
 
-const logoUrl = `${import.meta.env.BASE_URL}assets/nono2000-logo-aqua-gel.png?v=20260825`
+const logoUrl = assetUrl('assets/nono2000-logo-aqua-gel.png?v=20260825')
 
 export function BrandLogo({ variant }: BrandLogoProps) {
   return (

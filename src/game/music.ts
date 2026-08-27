@@ -1,4 +1,6 @@
-const MUSIC_TRACK = `${import.meta.env.BASE_URL}audio/nostalgic-liquid-jungle-loop.mp3`
+import { assetUrl } from '../asset-url'
+
+const MUSIC_TRACK = assetUrl('audio/nostalgic-liquid-jungle-loop.mp3')
 const MUSIC_VOLUME = 0.02
 
 class GameMusic {
