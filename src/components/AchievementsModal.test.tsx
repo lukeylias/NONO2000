@@ -24,9 +24,9 @@ describe('AchievementsModal', () => {
     expect(screen.getByText('Completed 26 Aug 2026')).toBeInTheDocument()
     expect(screen.getAllByText('Locked')).toHaveLength(2)
     expect(screen.getByText('Saved on this device.')).toBeInTheDocument()
-    expect(document.querySelector('img[src="/assets/achievement-first-decode-vista.png"]')).toBeInTheDocument()
-    expect(document.querySelector('img[src="/assets/achievement-against-clock-vista.png"]')).toBeInTheDocument()
-    expect(document.querySelector('img[src="/assets/achievement-perfect-streak-vista.png"]')).toBeInTheDocument()
+    expect(document.querySelector(`img[src="${import.meta.env.BASE_URL}assets/achievement-first-decode-vista.png"]`)).toBeInTheDocument()
+    expect(document.querySelector(`img[src="${import.meta.env.BASE_URL}assets/achievement-against-clock-vista.png"]`)).toBeInTheDocument()
+    expect(document.querySelector(`img[src="${import.meta.env.BASE_URL}assets/achievement-perfect-streak-vista.png"]`)).toBeInTheDocument()
   })
 
   it('focuses its close control and closes with Escape', () => {
